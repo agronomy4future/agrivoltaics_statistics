@@ -338,10 +338,7 @@ ui <- dashboardPage(
   skin = "black",
   
   dashboardHeader(
-    title = span(
-      icon("sun"), "Agrivoltaics · Statistical Analyzer",
-      style = "font-family: monospace; font-size: 14px;"
-    )
+    title = "Agrivoltaics Stat"
   ),
   
   dashboardSidebar(
@@ -566,6 +563,24 @@ server <- function(input, output, session) {
     df <- rv$df
     
     # Factor conversion
+    # ── Factor level validation
+    check_cols <- Filter(Negate(is.null), list(
+      v$site, v$block,
+      if(v$genotype != "none") v$genotype else NULL,
+      if(v$row      != "none") v$row      else NULL,
+      if(v$season   != "none") v$season   else NULL,
+      if(v$plot     != "none") v$plot     else NULL,
+      if(v$location != "none") v$location else NULL
+    ))
+    for (col in check_cols) {
+      n_levels <- length(unique(na.omit(df[[col]])))
+      if (n_levels < 2) {
+        stop(paste0("Variable '", col, "' has only ", n_levels, " unique value. ",
+                    "Each variable must have at least 2 levels. ",
+                    "Please check your column assignments."))
+      }
+    }
+
     fac_cols <- c(v$site, v$block,
                   if(v$genotype != "none") v$genotype,
                   if(v$row      != "none") v$row,
@@ -636,7 +651,25 @@ server <- function(input, output, session) {
   
   # ── Results UI
   output$results_ui <- renderUI({
-    req(analysis_result())
+    result <- tryCatch(
+      analysis_result(),
+      error = function(e) {
+        return(tagList(fluidRow(
+          box(width = 12, status = "danger", title = "Analysis Error",
+              div(style = "padding:16px;",
+                  p(icon("exclamation-triangle"),
+                    style = "color:#ff6b6b; font-size:14px; font-family:monospace;",
+                    strong(e$message)),
+                  br(),
+                  p(style = "color:#8b949e; font-size:12px;",
+                    "Please check your variable assignments and ensure each variable has at least 2 unique levels.")
+              )
+          )
+        )))
+      }
+    )
+    req(!is.null(result))
+    if (inherits(result, "shiny.tag.list")) return(result)
     
     tagList(
       fluidRow(
