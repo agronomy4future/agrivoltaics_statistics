@@ -21,7 +21,6 @@ library(readr)
 if(!require(dplyr)) install.packages("dplyr")
 library(dplyr)
 
-
 # ─────────────────────────────────────────────
 #  CASE DESCRIPTIONS
 # ─────────────────────────────────────────────
@@ -131,8 +130,8 @@ get_layout_svg <- function(case_num, v) {
     "1" = sprintf('
 <svg viewBox="0 0 520 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="260" y="16" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Single Row</text>
-  <rect x="18" y="26" width="200" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
-  <text x="118" y="36" text-anchor="middle" fill="#f0a832" font-size="8" font-weight="bold">☀ Solar Panels (AV)</text>
+  <rect x="18" y="26" width="90" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
+  <text x="63" y="36" text-anchor="middle" fill="#f0a832" font-size="8" font-weight="bold">☀ Solar Panels (AV only)</text>
   <rect x="18" y="44" width="90" height="56" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
   <text x="63" y="62" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
   <text x="63" y="78" text-anchor="middle" fill="#8b949e" font-size="8">%s=AV</text>
@@ -166,7 +165,7 @@ get_layout_svg <- function(case_num, v) {
 <svg viewBox="0 0 540 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="270" y="15" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Multiple Rows Within Plot</text>
   <rect x="18" y="24" width="200" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
-  <text x="118" y="34" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
+  <text x="118" y="34" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels (AV only)</text>
   <rect x="18" y="42" width="200" height="86" rx="6" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
   <text x="118" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
   <rect x="22" y="60" width="192" height="22" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
