@@ -533,6 +533,16 @@ ui <- dashboardPage(
       menuItem("Analysis", tabName = "analysis", icon = icon("flask")),
       menuItem("About", tabName = "about", icon = icon("info-circle"))
     ),
+    tags$div(
+      style = "position: absolute; bottom: 60px; left: 0; right: 0; padding: 10px 15px; font-size: 13px; color: #2c2c2c; line-height: 1.8;",
+      tags$strong("How to Cite"), br(),
+      "Kim, J., 2026.", br(),
+      "Agrivoltaics Stat: A web-based", br(),
+      "statistical analysis tool for", br(),
+      "agrivoltaics field experiments", br(),
+      "[Software]. Available at:", br(),
+      "agrivoltaics.agronomy4future.com"
+    ),
     hr(),
     div(style = "padding: 10px; font-size: 11px; color: #8b949e;",
         "lme4 · lmerTest · emmeans", br(),
