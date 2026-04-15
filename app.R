@@ -542,31 +542,42 @@ ui <- dashboardPage(
   dashboardBody(
     tags$head(tags$style(HTML("
       body, .content-wrapper, .main-sidebar, .sidebar {
-        background-color: #0d1117 !important;
-        color: #e6edf3 !important;
+        background-color: #faf8f3 !important;
+        color: #2c2c2c !important;
       }
-      .box { background: #161b22 !important; border-top-color: #00d4aa !important; }
-      .box-header { background: #1c2230 !important; color: #e6edf3 !important; }
-      .box-title { color: #e6edf3 !important; font-family: monospace; }
-      .nav-tabs-custom > .tab-content { background: #161b22 !important; }
-      .nav-tabs-custom .nav-tabs li.active a { background: #1c2230 !important; color: #00d4aa !important; border-top-color: #00d4aa !important; }
-      .nav-tabs-custom .nav-tabs li a { background: #0d1117 !important; color: #8b949e !important; }
-      table.dataTable { background: #161b22 !important; color: #e6edf3 !important; }
-      table.dataTable thead { background: #1c2230 !important; color: #8b949e !important; }
-      .dataTables_wrapper { color: #e6edf3 !important; }
-      .form-control { background: #1c2230 !important; color: #e6edf3 !important; border-color: #2a3441 !important; }
-      .selectize-input { background: #1c2230 !important; color: #e6edf3 !important; border-color: #2a3441 !important; }
-      .selectize-dropdown { background: #1c2230 !important; color: #e6edf3 !important; }
-      .btn-primary { background: #00d4aa !important; border-color: #00a882 !important; color: #000 !important; font-weight: bold; }
-      .btn-default { background: #1c2230 !important; border-color: #2a3441 !important; color: #e6edf3 !important; }
-      .formula-box { background: #090d12; border: 1px solid #2a3441; border-left: 3px solid #00d4aa; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 12px; color: #00d4aa; margin-top: 10px; word-break: break-all; }
-      .case-badge { display: inline-block; background: #f0a83220; border: 1px solid #f0a832; color: #f0a832; font-size: 11px; font-weight: bold; padding: 3px 12px; border-radius: 20px; margin-top: 8px; font-family: monospace; }
-      .section-title { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.1em; font-weight: bold; margin: 16px 0 8px; border-bottom: 1px solid #2a3441; padding-bottom: 4px; }
-      .info-notice { background: #58a6ff18; border: 1px solid #58a6ff44; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #8b949e; margin-bottom: 14px; }
-      .skin-black .main-header .logo { background: #0d1117 !important; border-bottom: 2px solid #00d4aa !important; }
-      .skin-black .main-header .navbar { background: #0d1117 !important; }
-      .skin-black .main-sidebar { background: #161b22 !important; }
-      pre { background: #090d12 !important; color: #8b949e !important; border-color: #2a3441 !important; font-size: 11px; }
+      .box { background: #f5f2eb !important; border-top-color: #00d4aa !important; }
+      .box-header { background: #2c3e50 !important; }
+      .box-title { color: #ffffff !important; font-family: monospace; }
+      .nav-tabs-custom > .tab-content { background: #f5f2eb !important; }
+      .nav-tabs-custom .nav-tabs li.active a { background: #ede9df !important; color: #00a882 !important; border-top-color: #00d4aa !important; }
+      .nav-tabs-custom .nav-tabs li a { background: #faf8f3 !important; color: #666 !important; }
+      table.dataTable { background: #ffffff !important; color: #2c2c2c !important; }
+      table.dataTable thead { background: #ede9df !important; color: #555 !important; }
+      .dataTables_wrapper { color: #2c2c2c !important; }
+      .form-control { background: #ffffff !important; color: #2c2c2c !important; border-color: #ccc !important; }
+      .selectize-input { background: #ffffff !important; color: #2c2c2c !important; border-color: #ccc !important; }
+      .selectize-dropdown { background: #ffffff !important; color: #2c2c2c !important; }
+      .selectize-input * { color: #2c2c2c !important; }
+      .selectize-dropdown * { color: #2c2c2c !important; }
+      select, select option { color: #2c2c2c !important; background: #ffffff !important; }
+      input { color: #2c2c2c !important; background: #ffffff !important; }
+      label { color: #2c2c2c !important; }
+      .control-label { color: #2c2c2c !important; }
+      .shiny-input-container { color: #2c2c2c !important; }
+      .btn-primary { background: #00a882 !important; border-color: #007a60 !important; color: #ffffff !important; font-weight: bold; }
+      .btn-default { background: #4a4a4a !important; border-color: #555 !important; color: #ffffff !important; }
+      .btn-file { background: #4a4a4a !important; border-color: #555 !important; color: #ffffff !important; }
+      .formula-box { background: #f0ede4; border: 1px solid #2a3441; border-left: 3px solid #00d4aa; border-radius: 8px; padding: 12px 16px; font-family: monospace; font-size: 15px; color: #00a882; margin-top: 10px; word-break: break-all; }
+      .case-badge { display: inline-block; background: #f0a83220; border: 1px solid #f0a832; color: #f0a832; font-size: 14px; font-weight: bold; padding: 3px 12px; border-radius: 20px; margin-top: 8px; font-family: monospace; }
+      .section-title { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; font-weight: bold; margin: 16px 0 8px; border-bottom: 1px solid #2a3441; padding-bottom: 4px; }
+      .info-notice { background: #e8f4f8; border: 1px solid #b0d4e8; border-radius: 8px; padding: 10px 14px; font-size: 15px; color: #555; margin-bottom: 14px; }
+      .skin-black .main-header .logo { background: #ede9df !important; border-bottom: 2px solid #00d4aa !important; }
+      .skin-black .main-header .navbar { background: #ede9df !important; }
+      .skin-black .main-sidebar { background: #e8e4d9 !important; }
+      pre { background: #f0ede4 !important; color: #555 !important; border-color: #ccc !important; font-size: 15px; }
+      table.dataTable td { font-size: 15px !important; }
+      table.dataTable th { font-size: 15px !important; }
+      .dataTables_wrapper { font-size: 15px !important; }
     "))),
     
     tabItems(
@@ -683,24 +694,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_season",    choices = opt_choices)
     updateSelectInput(session, "sel_plot",      choices = opt_choices)
     
-    # Auto-detect
-    auto <- list(
-      sel_y        = c("yield","output","y","biomass","grain"),
-      sel_site     = c("site","av_site","treatment","trt"),
-      sel_block    = c("block","rep","replicate"),
-      sel_genotype = c("genotype","cultivar","variety","cv","geno"),
-      sel_row      = c("row","rows"),
-      sel_season   = c("season","year"),
-      sel_plot     = c("plot")
-    )
-    for (sel_id in names(auto)) {
-      for (col in cols) {
-        if (any(sapply(auto[[sel_id]], function(k) grepl(k, tolower(col))))) {
-          updateSelectInput(session, sel_id, selected = col)
-          break
-        }
-      }
-    }
+
   })
   
   # ── Preview table
@@ -732,7 +726,7 @@ server <- function(input, output, session) {
   output$formula_preview <- renderUI({
     v <- get_vars()
     if (v$y == "" || v$site == "" || v$block == "") {
-      return(div(class = "formula-box", style = "color:#484f58; font-style:italic",
+      return(div(class = "formula-box", style = "color:#484f58; font-style:italic; font-size:15px",
                  "Select Y, Site, and Block to preview the model formula"))
     }
     result <- tryCatch(build_formula(v), error = function(e) NULL)
@@ -870,10 +864,10 @@ server <- function(input, output, session) {
           box(width = 12, status = "danger", title = "Analysis Error",
               div(style = "padding:16px;",
                   p(icon("exclamation-triangle"),
-                    style = "color:#ff6b6b; font-size:14px; font-family:monospace;",
+                    style = "color:#ff6b6b; font-size:16px; font-family:monospace;",
                     strong(e$message)),
                   br(),
-                  p(style = "color:#8b949e; font-size:12px;",
+                  p(style = "color:#8b949e; font-size:16px;",
                     "Please check your variable assignments and ensure each variable has at least 2 unique levels.")
               )
           )
@@ -938,7 +932,7 @@ server <- function(input, output, session) {
   # ── Post-hoc title
   output$posthoc_title <- renderUI({
     req(analysis_result())
-    div(style = "font-size:12px; color:#8b949e; margin-bottom:8px;",
+    div(style = "font-size:16px; color:#8b949e; margin-bottom:8px;",
         paste("Estimated marginal means for:", analysis_result()$posthoc_term,
               "| Sidak adjustment | CLD letters"))
   })
@@ -964,7 +958,7 @@ server <- function(input, output, session) {
                    fill = ifelse(grepl("Residual", Groups), "#ff6b6b", "#00d4aa"))) +
       geom_col(width = 0.6, show.legend = FALSE) +
       geom_text(aes(label = paste0(round(`% of Total`, 1), "%")),
-                hjust = -0.1, color = "#e6edf3", size = 3.5) +
+                hjust = -0.1, color = "#2c2c2c", size = 5) +
       coord_flip() +
       scale_fill_identity() +
       scale_y_continuous(limits = c(0, 115)) +
@@ -972,15 +966,15 @@ server <- function(input, output, session) {
            x = NULL, y = "% of Total Variance") +
       theme_minimal(base_family = "mono") +
       theme(
-        plot.background  = element_rect(fill = "#161b22", color = NA),
-        panel.background = element_rect(fill = "#161b22", color = NA),
-        panel.grid.major = element_line(color = "#2a3441"),
+        plot.background  = element_rect(fill = "#faf8f3", color = NA),
+        panel.background = element_rect(fill = "#faf8f3", color = NA),
+        panel.grid.major = element_line(color = "#dddddd"),
         panel.grid.minor = element_blank(),
-        axis.text  = element_text(color = "#8b949e", size = 10),
-        axis.title = element_text(color = "#8b949e", size = 10),
-        plot.title = element_text(color = "#e6edf3", size = 12, face = "bold")
+        axis.text  = element_text(color = "#2c2c2c", size = 18),
+        axis.title = element_text(color = "#2c2c2c", size = 18),
+        plot.title = element_text(color = "#2c2c2c", size = 20, face = "bold")
       )
-  }, bg = "#161b22")
+  }, bg = "#faf8f3")
   
   # ── ANOVA plot
   output$plot_anova <- renderPlot({
@@ -994,7 +988,7 @@ server <- function(input, output, session) {
                     fill = ifelse(Significant, "#f0a832", "#2a3441"))) +
       geom_col(width = 0.6, show.legend = FALSE) +
       geom_text(aes(label = paste0(round(`F value`, 1), " ", Sig)),
-                hjust = -0.1, color = "#e6edf3", size = 3.2) +
+                hjust = -0.1, color = "#2c2c2c", size = 5) +
       coord_flip() +
       scale_fill_identity() +
       scale_y_continuous(limits = c(0, max(tbl[["F value"]]) * 1.25)) +
@@ -1002,15 +996,15 @@ server <- function(input, output, session) {
            x = NULL, y = "F value") +
       theme_minimal(base_family = "mono") +
       theme(
-        plot.background  = element_rect(fill = "#161b22", color = NA),
-        panel.background = element_rect(fill = "#161b22", color = NA),
-        panel.grid.major = element_line(color = "#2a3441"),
+        plot.background  = element_rect(fill = "#faf8f3", color = NA),
+        panel.background = element_rect(fill = "#faf8f3", color = NA),
+        panel.grid.major = element_line(color = "#dddddd"),
         panel.grid.minor = element_blank(),
-        axis.text  = element_text(color = "#8b949e", size = 9),
-        axis.title = element_text(color = "#8b949e", size = 10),
-        plot.title = element_text(color = "#e6edf3", size = 12, face = "bold")
+        axis.text  = element_text(color = "#2c2c2c", size = 18),
+        axis.title = element_text(color = "#2c2c2c", size = 18),
+        plot.title = element_text(color = "#2c2c2c", size = 20, face = "bold")
       )
-  }, bg = "#161b22")
+  }, bg = "#faf8f3")
   
   # ── Post-hoc plot
   output$plot_posthoc <- renderPlot({
@@ -1048,34 +1042,34 @@ server <- function(input, output, session) {
     if (!is.null(se_col)) {
       p <- p + geom_errorbar(aes(ymin = emmean - .data[[se_col]],
                                   ymax = emmean + .data[[se_col]]),
-                              width = 0.2, color = "#e6edf3", linewidth = 0.6)
+                              width = 0.2, color = "#2c2c2c", linewidth = 0.6)
     }
     if (!is.null(grp_col)) {
       p <- p + geom_text(aes(label = trimws(.data[[grp_col]]),
                               y = emmean + (max(emmean) * 0.05)),
-                          color = "#f0a832", size = 4, fontface = "bold")
+                          color = "#f0a832", size = 6, fontface = "bold")
     }
     
     p <- p +
       geom_text(aes(label = round(emmean, 1), y = emmean / 2),
-                color = "#0d1117", size = 3.5, fontface = "bold") +
+                color = "#0d1117", size = 6, fontface = "bold") +
       coord_flip() +
       labs(title = paste("Post-hoc Estimated Means:", analysis_result()$posthoc_term),
            subtitle = "Error bars = SE | Letters = Sidak CLD",
            x = NULL, y = paste("Estimated Mean of", v$y)) +
       theme_minimal(base_family = "mono") +
       theme(
-        plot.background  = element_rect(fill = "#161b22", color = NA),
-        panel.background = element_rect(fill = "#161b22", color = NA),
-        panel.grid.major = element_line(color = "#2a3441"),
+        plot.background  = element_rect(fill = "#faf8f3", color = NA),
+        panel.background = element_rect(fill = "#faf8f3", color = NA),
+        panel.grid.major = element_line(color = "#dddddd"),
         panel.grid.minor = element_blank(),
-        axis.text  = element_text(color = "#8b949e", size = 9),
-        axis.title = element_text(color = "#8b949e", size = 10),
-        plot.title    = element_text(color = "#e6edf3", size = 12, face = "bold"),
-        plot.subtitle = element_text(color = "#8b949e", size = 9)
+        axis.text  = element_text(color = "#2c2c2c", size = 18),
+        axis.title = element_text(color = "#2c2c2c", size = 18),
+        plot.title    = element_text(color = "#2c2c2c", size = 20, face = "bold"),
+        plot.subtitle = element_text(color = "#555555", size = 15)
       )
     print(p)
-  }, bg = "#161b22")
+  }, bg = "#faf8f3")
   
   # ── R Code
   output$r_code <- renderText({
