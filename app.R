@@ -147,10 +147,7 @@ get_layout_svg <- function(case_num, v) {
   <rect x="118" y="44" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
   <text x="163" y="65" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
   <text x="163" y="79" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
-  <line x1="10" y1="44" x2="10" y2="100" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="10" y1="44" x2="16" y2="44" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="10" y1="100" x2="16" y2="100" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="6" y="75" text-anchor="end" fill="#8b949e" font-size="8">%s-I</text>
+
   <line x1="10" y1="108" x2="10" y2="164" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="108" x2="16" y2="108" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="164" x2="16" y2="164" stroke="#8b949e" stroke-width="1.5"/>
@@ -161,16 +158,13 @@ get_layout_svg <- function(case_num, v) {
   <rect x="118" y="108" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
   <text x="163" y="129" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
   <text x="163" y="143" text-anchor="middle" fill="#8b949e" font-size="7">Block 2 = Plot 2</text>
-  <line x1="10" y1="108" x2="10" y2="164" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="10" y1="108" x2="16" y2="108" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="10" y1="164" x2="16" y2="164" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="6" y="139" text-anchor="end" fill="#8b949e" font-size="8">%s-II</text>
+
   <rect x="240" y="44" width="260" height="50" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
   <text x="370" y="62" text-anchor="middle" fill="#8b949e" font-size="9">Random effect:</text>
-  <text x="370" y="78" text-anchor="middle" fill="#00d4aa" font-size="10" font-weight="bold">(1 | %s:%s)</text>
+  <text x="370" y="78" text-anchor="middle" fill="#00d4aa" font-size="10" font-weight="bold">(1 | Site:Block)</text>
   <rect x="240" y="104" width="260" height="34" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
   <text x="370" y="118" text-anchor="middle" fill="#8b949e" font-size="9">Fixed effect:</text>
-  <text x="370" y="132" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="bold">%s</text>
+  <text x="370" y="132" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="bold">Site</text>
   <rect x="240" y="148" width="260" height="36" rx="5" fill="#f0a83220" stroke="#f0a832" stroke-width="1"/>
   <text x="370" y="163" text-anchor="middle" fill="#f0a832" font-size="9">⚠ Treatment confounded with space</text>
   <text x="370" y="177" text-anchor="middle" fill="#f0a832" font-size="9">→ LMM accounts for this</text>
@@ -190,19 +184,19 @@ get_layout_svg <- function(case_num, v) {
   <rect x="18" y="42" width="200" height="86" rx="6" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
   <text x="118" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV (Block 1 = Plot 1)</text>
   <rect x="22" y="60" width="192" height="22" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="118" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side1</text>
+  <text x="118" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">Row = Side1</text>
   <rect x="22" y="84" width="192" height="22" rx="3" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
-  <text x="118" y="99" text-anchor="middle" fill="#00d4aa" font-size="8">%s = Middle</text>
+  <text x="118" y="99" text-anchor="middle" fill="#00d4aa" font-size="8">Row = Middle</text>
   <rect x="22" y="108" width="192" height="16" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="118" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side2</text>
+  <text x="118" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">Row = Side2</text>
   <rect x="228" y="42" width="200" height="86" rx="6" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
   <text x="328" y="56" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control (Block 1 = Plot 1)</text>
   <rect x="232" y="60" width="192" height="22" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="328" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side1</text>
+  <text x="328" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">Row = Side1</text>
   <rect x="232" y="84" width="192" height="22" rx="3" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
-  <text x="328" y="99" text-anchor="middle" fill="#00d4aa" font-size="8">%s = Middle</text>
+  <text x="328" y="99" text-anchor="middle" fill="#00d4aa" font-size="8">Row = Middle</text>
   <rect x="232" y="108" width="192" height="16" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="328" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side2</text>
+  <text x="328" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">Row = Side2</text>
 
 
   <rect x="18" y="140" width="410" height="26" rx="5" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1"/>
@@ -214,7 +208,7 @@ get_layout_svg <- function(case_num, v) {
 <svg viewBox="0 0 540 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="270" y="14" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Single Row · Multiple Seasons</text>
   <rect x="18" y="22" width="230" height="13" rx="4" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
-  <text x="133" y="33" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">%s = 1</text>
+  <text x="133" y="33" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">Season = 1</text>
   <rect x="18" y="40" width="100" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
   <text x="68" y="50" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
   <line x1="10" y1="56" x2="10" y2="110" stroke="#8b949e" stroke-width="1.5"/>
@@ -231,7 +225,7 @@ get_layout_svg <- function(case_num, v) {
   <line x1="256" y1="83" x2="278" y2="83" stroke="#3fb950" stroke-width="2" stroke-dasharray="4,3"/>
   <text x="267" y="79" text-anchor="middle" fill="#3fb950" font-size="9">→</text>
   <rect x="290" y="22" width="230" height="13" rx="4" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
-  <text x="405" y="33" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">%s = 2</text>
+  <text x="405" y="33" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">Season = 2</text>
   <rect x="290" y="40" width="100" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
   <text x="340" y="50" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
   <rect x="290" y="56" width="100" height="54" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
@@ -285,7 +279,7 @@ get_layout_svg <- function(case_num, v) {
 <svg viewBox="0 0 580 280" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="290" y="13" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Multiple Cultivars · Multiple Rows · Multiple Seasons</text>
   <rect x="16" y="20" width="262" height="12" rx="3" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
-  <text x="147" y="30" text-anchor="middle" fill="#3fb950" font-size="8">%s = 1</text>
+  <text x="147" y="30" text-anchor="middle" fill="#3fb950" font-size="8">Season = 1</text>
   <line x1="8" y1="36" x2="8" y2="136" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="8" y1="36" x2="14" y2="36" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="8" y1="136" x2="14" y2="136" stroke="#8b949e" stroke-width="1.5"/>
@@ -319,7 +313,7 @@ get_layout_svg <- function(case_num, v) {
   <rect x="210" y="110" width="44" height="16" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.6"/>
   <line x1="256" y1="86" x2="296" y2="86" stroke="#3fb950" stroke-width="2" stroke-dasharray="4,3"/>
   <rect x="298" y="20" width="262" height="12" rx="3" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
-  <text x="429" y="30" text-anchor="middle" fill="#3fb950" font-size="8">%s = 2</text>
+  <text x="429" y="30" text-anchor="middle" fill="#3fb950" font-size="8">Season = 2</text>
   <rect x="298" y="36" width="120" height="100" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.2"/>
   <text x="358" y="50" text-anchor="middle" fill="#ff6b6b" font-size="8" font-weight="bold">AV</text>
   <rect x="304" y="54" width="52" height="76" rx="3" fill="#bc8cff22" stroke="#bc8cff" stroke-width="0.8"/>
@@ -533,16 +527,6 @@ ui <- dashboardPage(
       menuItem("Analysis", tabName = "analysis", icon = icon("flask")),
       menuItem("About", tabName = "about", icon = icon("info-circle"))
     ),
-    tags$div(
-      style = "position: absolute; bottom: 60px; left: 0; right: 0; padding: 10px 15px; font-size: 13px; color: #2c2c2c; line-height: 1.8;",
-      tags$strong("How to Cite"), br(),
-      "Kim, J., 2026.", br(),
-      "Agrivoltaics Stat: A web-based", br(),
-      "statistical analysis tool for", br(),
-      "agrivoltaics field experiments", br(),
-      "[Software]. Available at:", br(),
-      "agrivoltaics.agronomy4future.com"
-    ),
     hr(),
     div(style = "padding: 10px;",
         tags$a(href = "https://github.com/agronomy4future/agrivoltaics",
@@ -554,7 +538,18 @@ ui <- dashboardPage(
           "© J.K Kim (kimjk@agronomy4future.com)", br(),
           "All Rights Reserved"),
         br(), br(),
-        tags$img(src = "logo.svg", style = "width: 80%; max-width: 160px;"))
+        tags$img(src = "logo.svg", style = "width: 80%; max-width: 160px;"),
+        br(), br(),
+        tags$div(style = "font-size: 13px; color: #2c2c2c; line-height: 1.8;",
+          tags$strong("How to Cite"), br(),
+          "Kim, J., 2026.", br(),
+          "Agrivoltaics Stat: A web-based", br(),
+          "statistical analysis tool for", br(),
+          "agrivoltaics field experiments", br(),
+          "[Software]. Available at:", br(),
+          "agrivoltaics.agronomy4future.com"
+        )
+    )
   ),
   
   dashboardBody(
@@ -681,9 +676,124 @@ ui <- dashboardPage(
       
       tabItem(tabName = "about",
         box(width = 12, title = "About", status = "primary",
-            p("This app implements Linear Mixed Models for Agrivoltaics field experiments,"),
-            p("following the statistical framework developed by JK Kim (agronomy4future.com)."),
+            h4(strong("Why Agrivoltaics Needs Its Own Statistical Approach")),
             br(),
+            div(style = "background:#1c2230; border-radius:8px; padding:10px; max-width:600px;",
+                HTML('<svg viewBox="0 0 520 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:monospace">
+  <text x="260" y="16" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Single Row</text>
+  <rect x="18" y="26" width="90" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
+  <text x="63" y="36" text-anchor="middle" fill="#f0a832" font-size="8" font-weight="bold">☀ Solar Panels</text>
+  <line x1="10" y1="44" x2="10" y2="100" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="44" x2="16" y2="44" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="100" x2="16" y2="100" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="75" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,75)">Block 1</text>
+  <rect x="18" y="44" width="90" height="56" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="63" y="65" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="63" y="79" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
+  <rect x="118" y="44" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="163" y="65" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
+  <text x="163" y="79" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
+  <line x1="10" y1="108" x2="10" y2="164" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="108" x2="16" y2="108" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="164" x2="16" y2="164" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="139" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,139)">Block 2</text>
+  <rect x="18" y="108" width="90" height="56" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="63" y="129" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="63" y="143" text-anchor="middle" fill="#8b949e" font-size="7">Block 2 = Plot 2</text>
+  <rect x="118" y="108" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="163" y="129" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
+  <text x="163" y="143" text-anchor="middle" fill="#8b949e" font-size="7">Block 2 = Plot 2</text>
+  <rect x="240" y="44" width="260" height="50" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+  <text x="370" y="62" text-anchor="middle" fill="#8b949e" font-size="9">Random effect:</text>
+  <text x="370" y="78" text-anchor="middle" fill="#00d4aa" font-size="10" font-weight="bold">(1 | Site:Block)</text>
+  <rect x="240" y="104" width="260" height="34" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+  <text x="370" y="118" text-anchor="middle" fill="#8b949e" font-size="9">Fixed effect:</text>
+  <text x="370" y="132" text-anchor="middle" fill="#ff6b6b" font-size="10" font-weight="bold">Site</text>
+  <rect x="240" y="148" width="260" height="36" rx="5" fill="#f0a83220" stroke="#f0a832" stroke-width="1"/>
+  <text x="370" y="163" text-anchor="middle" fill="#f0a832" font-size="9">⚠ Treatment confounded with space</text>
+  <text x="370" y="177" text-anchor="middle" fill="#f0a832" font-size="9">→ LMM accounts for this</text>
+  <rect x="18" y="172" width="190" height="26" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1"/>
+  <text x="113" y="187" text-anchor="middle" fill="#00d4aa" font-size="8">lmer(Yield ~ Site + (1|Site:Block))</text>
+</svg>')
+            ),
+            br(),
+            p("Standard experimental designs — such as split-plot or randomized complete block design (RCBD) — are commonly applied in agrivoltaics research, but they are fundamentally misaligned with the actual structure of agrivoltaics experiments."),
+            br(),
+            p("In a typical agrivoltaics study, the treatment (solar panel shading) is permanently fixed in space. Full randomization of treatment and control plots — as required by split-plot or RCBD assumptions — would demand two to four times the land area, and removing solar panels to create control conditions is simply not feasible. More critically, the treatment is perfectly confounded with space: any observed difference between AV and control plots may reflect spatial variation rather than the treatment effect itself."),
+            br(),
+            p("Despite these constraints, many researchers continue to apply split-plot or RCBD models without accounting for the spatial structure inherent to agrivoltaics systems. This leads to misrepresentation of treatment effects and inflated or deflated estimates of variability."),
+            br(),
+            p(strong("Agrivoltaics Stat"), " was developed to address this gap. By applying linear mixed models (LMM) that explicitly account for the spatial and structural constraints of agrivoltaics experiments, this tool ensures that statistical inference is both valid and appropriate for real field conditions."),
+            br(),
+            div(style = "max-width:600px;",
+            HTML('<svg width="100%" viewBox="0 0 680 430" xmlns="http://www.w3.org/2000/svg">
+  <text style="font-size:14px;font-weight:500" x="340" y="22" text-anchor="middle" fill="#2c2c2c">Terminology</text>
+  <text style="font-size:14px;font-weight:500" x="170" y="48" text-anchor="middle" fill="#2c2c2c">AV</text>
+  <text style="font-size:14px;font-weight:500" x="490" y="48" text-anchor="middle" fill="#2c2c2c">Control</text>
+  <rect x="30" y="58" width="280" height="260" rx="8" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <rect x="350" y="58" width="280" height="260" rx="8" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <rect x="46" y="76" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <line x1="58" y1="88" x2="58" y2="116" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="72" y1="88" x2="72" y2="116" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="86" y1="88" x2="86" y2="116" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <rect x="104" y="76" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="130" y="106" text-anchor="middle" fill="#2c2c2c">Crop 1</text>
+  <rect x="162" y="76" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="188" y="106" text-anchor="middle" fill="#2c2c2c">Crop 3</text>
+  <rect x="220" y="76" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="246" y="106" text-anchor="middle" fill="#2c2c2c">Crop 2</text>
+  <rect x="46" y="136" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="72" y="166" text-anchor="middle" fill="#2c2c2c">Crop 1</text>
+  <rect x="104" y="136" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="130" y="166" text-anchor="middle" fill="#2c2c2c">Crop 2</text>
+  <rect x="162" y="136" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="188" y="166" text-anchor="middle" fill="#2c2c2c">Crop 1</text>
+  <rect x="220" y="136" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="246" y="166" text-anchor="middle" fill="#2c2c2c">Crop 1</text>
+  <rect x="46" y="196" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="72" y="226" text-anchor="middle" fill="#2c2c2c">Crop 3</text>
+  <rect x="104" y="196" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="130" y="226" text-anchor="middle" fill="#2c2c2c">Crop 3</text>
+  <rect x="162" y="196" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="188" y="226" text-anchor="middle" fill="#2c2c2c">Crop 2</text>
+  <rect x="220" y="196" width="52" height="52" rx="4" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="246" y="226" text-anchor="middle" fill="#2c2c2c">Crop 3</text>
+  <line x1="98" y1="70" x2="98" y2="258" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <line x1="156" y1="70" x2="156" y2="258" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <line x1="214" y1="70" x2="214" y2="258" stroke="#8b949e" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <rect x="366" y="76" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="424" y="76" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="482" y="76" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="540" y="76" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="366" y="136" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="424" y="136" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="482" y="136" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="540" y="136" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="366" y="196" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="424" y="196" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="482" y="196" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <rect x="540" y="196" width="52" height="52" rx="4" fill="#1D9E7514" stroke="#1D9E75" stroke-width="0.8"/>
+  <line x1="30" y1="335" x2="650" y2="335" stroke="#cccccc" stroke-width="0.8"/>
+  <rect x="40" y="348" width="32" height="22" rx="3" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text style="font-size:12px" x="80" y="362" fill="#2c2c2c">Site</text>
+  <rect x="130" y="348" width="32" height="22" rx="3" fill="#1D9E7526" stroke="#1D9E75" stroke-width="1"/>
+  <text style="font-size:12px" x="170" y="362" fill="#2c2c2c">Plot</text>
+  <rect x="220" y="342" width="52" height="68" rx="4" fill="none" stroke="#8b949e" stroke-width="1.2"/>
+  <rect x="226" y="348" width="40" height="17" rx="2" fill="#1D9E7526" stroke="#1D9E75" stroke-width="0.8"/>
+  <text style="font-size:12px" x="246" y="360" text-anchor="middle" fill="#2c2c2c">Crop 1</text>
+  <rect x="226" y="369" width="40" height="17" rx="2" fill="#1D9E7526" stroke="#1D9E75" stroke-width="0.8"/>
+  <text style="font-size:12px" x="246" y="381" text-anchor="middle" fill="#2c2c2c">Crop 2</text>
+  <rect x="226" y="390" width="40" height="17" rx="2" fill="#1D9E7526" stroke="#1D9E75" stroke-width="0.8"/>
+  <text style="font-size:12px" x="246" y="402" text-anchor="middle" fill="#2c2c2c">Crop 3</text>
+  <text style="font-size:12px" x="282" y="380" fill="#2c2c2c">Block</text>
+  <rect x="360" y="348" width="32" height="22" rx="3" fill="#1D9E7520" stroke="#1D9E75" stroke-width="0.8"/>
+  <line x1="368" y1="351" x2="368" y2="367" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="376" y1="351" x2="376" y2="367" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="384" y1="351" x2="384" y2="367" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text style="font-size:12px" x="400" y="362" fill="#2c2c2c">Row</text>
+</svg>')),
+            br(),
+            hr(),
             p(strong("Reference:")),
             p(a("Statistical Models in Agrivoltaics (agronomy4future.com)",
                 href = "https://agronomy4future.com/archives/24404", target = "_blank")),
@@ -884,13 +994,12 @@ server <- function(input, output, session) {
     
     # Variance components
     vc <- as.data.frame(VarCorr(model))
-    vc_total <- sum(vc$vcov)
-    vc$pct <- round(vc$vcov / vc_total * 100, 2)
-    vc$vcov <- round(vc$vcov, 3)
-    colnames(vc)[colnames(vc) == "grp"]  <- "Groups"
-    colnames(vc)[colnames(vc) == "vcov"] <- "Variance"
-    vc <- vc[, c("Groups", "Variance", "pct")]
-    colnames(vc)[3] <- "% of Total"
+    vc <- vc[is.na(vc$var2), ]
+    vc <- vc[, c("grp", "vcov")]
+    colnames(vc) <- c("Groups", "Variance")
+    vc_total <- sum(vc$Variance, na.rm = TRUE)
+    vc$"% of Total" <- round(vc$Variance / vc_total * 100, 2)
+    vc$Variance <- round(vc$Variance, 4)
     
     # ANOVA
     anova_tbl <- as.data.frame(anova(model, type = 3))
@@ -947,6 +1056,7 @@ server <- function(input, output, session) {
             tabsetPanel(
               tabPanel("Variance Components",
                        br(),
+                       uiOutput("singular_warning"),
                        DTOutput("tbl_variance"),
                        br(),
                        plotOutput("plot_variance", height = "300px")),
@@ -976,6 +1086,28 @@ server <- function(input, output, session) {
   })
   
   # ── Variance table
+  # ── Singular fit warning
+  output$singular_warning <- renderUI({
+    req(analysis_result())
+    model <- analysis_result()$model
+    is_singular <- isSingular(model)
+    if (!is_singular) return(NULL)
+    div(style = "background:#fff8e1; border:1px solid #f0a832; border-left:4px solid #f0a832; border-radius:6px; padding:14px 18px; margin-bottom:14px; font-size:14px; color:#5a4000;",
+      tags$strong("Singular fit detected — one or more random effect variances estimated as zero."),
+      br(), br(),
+      "The analysis results (fixed effects, ANOVA, post-hoc) remain valid. However, the variance decomposition may not reflect the true random effect structure.",
+      br(), br(),
+      tags$strong("Possible reasons:"),
+      tags$ul(
+        tags$li("Too few levels in a grouping factor (e.g., only 2–3 blocks)"),
+        tags$li("Multiple observations within the same Block/Row combination, making it impossible to separate block-level variance from residual variance"),
+        tags$li("The random effect explains little variation in this dataset"),
+        tags$li("The model is too complex relative to the data structure (overfitting)"),
+        tags$li("Perfect confounding between random effects (e.g., Block and Block:Row are not independently estimable)")
+      )
+    )
+  })
+
   output$tbl_variance <- renderDT({
     req(analysis_result())
     datatable(analysis_result()$vc,
