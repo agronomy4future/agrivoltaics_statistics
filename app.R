@@ -552,7 +552,9 @@ ui <- dashboardPage(
         br(), br(),
         tags$span(style = "font-size: 13px; color: #555;",
           "© J.K Kim (kimjk@agronomy4future.com)", br(),
-          "All Rights Reserved"))
+          "All Rights Reserved"),
+        br(), br(),
+        tags$img(src = "logo.svg", style = "width: 80%; max-width: 160px;"))
   ),
   
   dashboardBody(
