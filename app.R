@@ -544,9 +544,15 @@ ui <- dashboardPage(
       "agrivoltaics.agronomy4future.com"
     ),
     hr(),
-    div(style = "padding: 10px; font-size: 11px; color: #8b949e;",
-        "lme4 · lmerTest · emmeans", br(),
-        "agronomy4future.com")
+    div(style = "padding: 10px;",
+        tags$a(href = "https://github.com/agronomy4future/agrivoltaics",
+               target = "_blank",
+               style = "display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #2c2c2c; text-decoration: none; font-weight: bold;",
+               icon("r-project"), "agrivoltaics()"),
+        br(), br(),
+        tags$span(style = "font-size: 13px; color: #555;",
+          "© J.K Kim (kimjk@agronomy4future.com)", br(),
+          "All Rights Reserved"))
   ),
   
   dashboardBody(
@@ -596,11 +602,15 @@ ui <- dashboardPage(
           # ── STEP 1: UPLOAD
           box(width = 12, title = "Step 01 — Upload Field Data", status = "primary", solidHeader = FALSE,
               div(class = "info-notice",
-                  icon("info-circle"), " Upload a CSV file containing your agrivoltaics field experiment data. ",
+                  icon("info-circle"), " Upload a CSV or Excel (.xlsx) file containing your agrivoltaics field experiment data. ",
                   strong("Block"), " and ", strong("Site (AV/Control)"), " columns are required."),
-              fileInput("file", NULL, accept = ".csv",
-                        buttonLabel = "Browse CSV...",
+              fileInput("file", NULL, accept = c(".csv", ".xlsx"),
+                        buttonLabel = "Browse CSV/Excel...",
                         placeholder = "No file selected"),
+              conditionalPanel(
+                condition = "output.is_xlsx",
+                selectInput("sel_sheet", "Select Sheet", choices = NULL)
+              ),
               DTOutput("preview_table")
           )
         ),
@@ -621,7 +631,16 @@ ui <- dashboardPage(
                 column(4, selectInput("sel_season",   "Season",    choices = c("— not used —" = "none")))
               ),
               fluidRow(
-                column(4, selectInput("sel_plot",     "Plot",      choices = c("— not used —" = "none"))),
+                column(4, 
+                  conditionalPanel(
+                    condition = "input.sel_genotype != 'none' && input.sel_genotype != ''",
+                    selectInput("sel_plot", "Plot", choices = c("— not used —" = "none"))
+                  ),
+                  conditionalPanel(
+                    condition = "input.sel_genotype == 'none' || input.sel_genotype == ''",
+                    selectInput("sel_plot_disabled", "Plot", choices = c("— not used —" = "none"), selected = "none")
+                  )
+                ),
                 column(8, conditionalPanel(
                   condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row == 'none' && input.sel_genotype == 'none'",
                   div(style = "margin-top: 25px;",
@@ -688,7 +707,15 @@ server <- function(input, output, session) {
   
   observeEvent(input$file, {
     req(input$file)
-    df <- tryCatch(read_csv(input$file$datapath, show_col_types = FALSE), error = function(e) NULL)
+    ext <- tools::file_ext(input$file$name)
+    if (ext == "xlsx") {
+      sheets <- readxl::excel_sheets(input$file$datapath)
+      updateSelectInput(session, "sel_sheet", choices = sheets, selected = sheets[1])
+    }
+    df <- tryCatch({
+      if (ext == "xlsx") readxl::read_excel(input$file$datapath, sheet = input$sel_sheet)
+      else read_csv(input$file$datapath, show_col_types = FALSE)
+    }, error = function(e) NULL)
     if (is.null(df)) return()
     rv$df <- as.data.frame(df)
     
@@ -707,6 +734,44 @@ server <- function(input, output, session) {
 
   })
   
+  # ── xlsx 여부 판단
+  output$is_xlsx <- reactive({
+    req(input$file)
+    tools::file_ext(input$file$name) == "xlsx"
+  })
+  outputOptions(output, "is_xlsx", suspendWhenHidden = FALSE)
+
+  # ── Genotype 없으면 Plot 자동 none
+  observeEvent(input$sel_genotype, {
+    if (input$sel_genotype == "none") {
+      updateSelectInput(session, "sel_plot", selected = "none")
+    }
+  }, ignoreInit = TRUE)
+
+  # ── 시트 변경시 데이터 다시 로드
+  observeEvent(input$sel_sheet, {
+    req(input$file)
+    req(input$sel_sheet)
+    ext <- tools::file_ext(input$file$name)
+    if (ext != "xlsx") return()
+    df <- tryCatch(
+      readxl::read_excel(input$file$datapath, sheet = input$sel_sheet),
+      error = function(e) NULL
+    )
+    if (is.null(df)) return()
+    rv$df <- as.data.frame(df)
+    cols <- colnames(rv$df)
+    req_choices <- setNames(cols, cols)
+    opt_choices <- c("— not used —" = "none", setNames(cols, cols))
+    updateSelectInput(session, "sel_y",       choices = c("— select —" = "", req_choices))
+    updateSelectInput(session, "sel_site",     choices = c("— select —" = "", req_choices))
+    updateSelectInput(session, "sel_block",    choices = c("— select —" = "", req_choices))
+    updateSelectInput(session, "sel_genotype", choices = opt_choices)
+    updateSelectInput(session, "sel_row",      choices = opt_choices)
+    updateSelectInput(session, "sel_season",   choices = opt_choices)
+    updateSelectInput(session, "sel_plot",     choices = opt_choices)
+  }, ignoreInit = TRUE)
+
   # ── Preview table
   output$preview_table <- renderDT({
     req(rv$df)
@@ -833,31 +898,14 @@ server <- function(input, output, session) {
                      ifelse(anova_tbl[["Pr(>F)"]] < 0.05,  "*",
                      ifelse(anova_tbl[["Pr(>F)"]] < 0.1,   ".", "ns"))))
     
-    # Post-hoc: pick most relevant term
-    fixed_terms <- result$fixed
-    interaction_terms <- fixed_terms[grepl(":", fixed_terms)]
-    posthoc_term <- if (length(interaction_terms) > 0) {
-      interaction_terms[which.max(nchar(interaction_terms))]
-    } else {
-      v$site
-    }
-    posthoc_formula <- as.formula(paste("~", posthoc_term))
-    em <- tryCatch(emmeans(model, posthoc_formula), error = function(e) NULL)
-    
-    cld_tbl <- NULL
-    if (!is.null(em)) {
-      cld_tbl <- tryCatch({
-        cld_res <- cld(em, adjust = "sidak", Letters = letters, reverse = TRUE)
-        as.data.frame(cld_res)
-      }, error = function(e) as.data.frame(summary(em)))
-    }
-    
+    # ANOVA 항 목록 저장
+    anova_terms <- rownames(anova_tbl)
+
     list(
       model       = model,
       vc          = vc,
       anova_tbl   = anova_tbl,
-      cld_tbl     = cld_tbl,
-      posthoc_term= posthoc_term,
+      anova_terms = anova_terms,
       formula_str = result$formula_str,
       case_num    = result$case_num,
       v           = v,
@@ -907,6 +955,8 @@ server <- function(input, output, session) {
                        plotOutput("plot_anova", height = "300px")),
               tabPanel("Post-hoc (emmeans)",
                        br(),
+                       uiOutput("posthoc_selector"),
+                       br(),
                        uiOutput("posthoc_title"),
                        DTOutput("tbl_posthoc"),
                        br(),
@@ -940,18 +990,44 @@ server <- function(input, output, session) {
   })
   
   # ── Post-hoc title
-  output$posthoc_title <- renderUI({
+  # ── Post-hoc 항 선택 드롭다운
+  output$posthoc_selector <- renderUI({
     req(analysis_result())
+    terms <- analysis_result()$anova_terms
+    selectInput("sel_posthoc_term", 
+                label = "Select Post-hoc Term:",
+                choices = terms,
+                selected = terms[length(terms)])
+  })
+
+  # ── Post-hoc 계산 (reactive)
+  posthoc_result <- reactive({
+    req(analysis_result())
+    req(input$sel_posthoc_term)
+    model <- analysis_result()$model
+    term  <- input$sel_posthoc_term
+    posthoc_formula <- as.formula(paste("~", term))
+    em <- tryCatch(emmeans(model, posthoc_formula), error = function(e) NULL)
+    if (is.null(em)) return(NULL)
+    cld_tbl <- tryCatch({
+      cld_res <- cld(em, adjust = "sidak", Letters = letters, reverse = TRUE)
+      as.data.frame(cld_res)
+    }, error = function(e) as.data.frame(summary(em)))
+    list(cld_tbl = cld_tbl, posthoc_term = term)
+  })
+
+  output$posthoc_title <- renderUI({
+    req(posthoc_result())
     div(style = "font-size:16px; color:#8b949e; margin-bottom:8px;",
-        paste("Estimated marginal means for:", analysis_result()$posthoc_term,
+        paste("Estimated marginal means for:", posthoc_result()$posthoc_term,
               "| Sidak adjustment | CLD letters"))
   })
   
   # ── Post-hoc table
   output$tbl_posthoc <- renderDT({
-    req(analysis_result())
-    req(analysis_result()$cld_tbl)
-    tbl <- analysis_result()$cld_tbl
+    req(posthoc_result())
+    req(posthoc_result()$cld_tbl)
+    tbl <- posthoc_result()$cld_tbl
     tbl <- tbl[order(tbl$emmean, decreasing = TRUE), ]
     tbl <- round_df(tbl)
     datatable(tbl,
@@ -1018,15 +1094,15 @@ server <- function(input, output, session) {
   
   # ── Post-hoc plot
   output$plot_posthoc <- renderPlot({
-    req(analysis_result())
-    req(analysis_result()$cld_tbl)
-    tbl <- analysis_result()$cld_tbl
+    req(posthoc_result())
+    req(posthoc_result()$cld_tbl)
+    tbl <- posthoc_result()$cld_tbl
     tbl <- tbl[order(tbl$emmean, decreasing = TRUE), ]
     
     v <- analysis_result()$v
     
     # Create group label
-    term_cols <- strsplit(analysis_result()$posthoc_term, ":")[[1]]
+    term_cols <- strsplit(posthoc_result()$posthoc_term, ":")[[1]]
     term_cols <- term_cols[term_cols %in% colnames(tbl)]
     if (length(term_cols) > 0) {
       tbl$group_label <- apply(tbl[, term_cols, drop = FALSE], 1,
@@ -1064,7 +1140,7 @@ server <- function(input, output, session) {
       geom_text(aes(label = round(emmean, 1), y = emmean / 2),
                 color = "#0d1117", size = 6, fontface = "bold") +
       coord_flip() +
-      labs(title = paste("Post-hoc Estimated Means:", analysis_result()$posthoc_term),
+      labs(title = paste("Post-hoc Estimated Means:", posthoc_result()$posthoc_term),
            subtitle = "Error bars = SE | Letters = Sidak CLD",
            x = NULL, y = paste("Estimated Mean of", v$y)) +
       theme_minimal(base_family = "mono") +
@@ -1086,7 +1162,7 @@ server <- function(input, output, session) {
     req(analysis_result())
     v <- analysis_result()$v
     fs <- analysis_result()$formula_str
-    pt <- analysis_result()$posthoc_term
+    pt <- if (!is.null(posthoc_result())) posthoc_result()$posthoc_term else ""
     
     paste0(
 '# ─────────────────────────────────────────────\n',
