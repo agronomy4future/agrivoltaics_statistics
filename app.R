@@ -54,16 +54,28 @@ build_formula <- function(v) {
   } else if (!has("genotype") && !has("row") && has("season")) {
     case_num <- 3
     fixed  <- c(v$season, v$site, sprintf("%s:%s", v$season, v$site))
-    random <- c(sprintf("(1|%s)", v$block))
+    if (isTRUE(v$is_perennial)) {
+      random <- c(sprintf("(1|%s)", v$block),
+                  sprintf("(1|%s:%s)", v$block, v$season))
+    } else {
+      random <- c(sprintf("(1|%s)", v$block))
+    }
   } else if (!has("genotype") && has("row") && has("season")) {
     case_num <- 4
     fixed  <- c(v$season, v$site, v$row,
                 sprintf("%s:%s", v$season, v$site),
                 sprintf("%s:%s", v$season, v$row),
                 sprintf("%s:%s:%s", v$season, v$site, v$row))
-    random <- c(sprintf("(1|%s)", v$block),
-                sprintf("(1|%s:%s)", v$block, v$season),
-                sprintf("(1|%s:%s)", v$block, v$row))
+    if (isTRUE(v$is_perennial_row)) {
+      random <- c(sprintf("(1|%s)", v$block),
+                  sprintf("(1|%s:%s)", v$block, v$season),
+                  sprintf("(1|%s:%s)", v$block, v$row),
+                  sprintf("(1|%s:%s:%s)", v$block, v$season, v$row))
+    } else {
+      random <- c(sprintf("(1|%s)", v$block),
+                  sprintf("(1|%s:%s)", v$block, v$season),
+                  sprintf("(1|%s:%s)", v$block, v$row))
+    }
   } else if (has("genotype") && !has("row") && !has("season")) {
     case_num <- 5
     fixed  <- c(v$site, v$genotype, sprintf("%s:%s", v$site, v$genotype))
@@ -104,10 +116,6 @@ build_formula <- function(v) {
         sprintf("(1|%s:%s)", v$block, v$row))
   }
   
-  if (has("location")) {
-    fixed  <- c(fixed, v$location)
-    random <- c(random, sprintf("(1|%s:%s)", v$location, v$block))
-  }
   
   formula_str <- sprintf("%s ~ %s", v$y, paste(c(fixed, random), collapse = " + "))
   list(formula_str = formula_str, case_num = case_num, fixed = fixed, random = random)
@@ -131,21 +139,31 @@ get_layout_svg <- function(case_num, v) {
 <svg viewBox="0 0 520 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="260" y="16" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Single Row</text>
   <rect x="18" y="26" width="90" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
-  <text x="63" y="36" text-anchor="middle" fill="#f0a832" font-size="8" font-weight="bold">☀ Solar Panels (AV only)</text>
+  <text x="63" y="36" text-anchor="middle" fill="#f0a832" font-size="8" font-weight="bold">☀ Solar Panels</text>
+  <line x1="10" y1="44" x2="10" y2="100" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="44" x2="16" y2="44" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="100" x2="16" y2="100" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="75" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,75)">Block 1</text>
   <rect x="18" y="44" width="90" height="56" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="63" y="62" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
-  <text x="63" y="78" text-anchor="middle" fill="#8b949e" font-size="8">%s=AV</text>
+  <text x="63" y="65" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="63" y="79" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
   <rect x="118" y="44" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="163" y="62" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
-  <text x="163" y="78" text-anchor="middle" fill="#8b949e" font-size="8">%s=Control</text>
+  <text x="163" y="65" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
+  <text x="163" y="79" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
   <line x1="10" y1="44" x2="10" y2="100" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="44" x2="16" y2="44" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="100" x2="16" y2="100" stroke="#8b949e" stroke-width="1.5"/>
   <text x="6" y="75" text-anchor="end" fill="#8b949e" font-size="8">%s-I</text>
+  <line x1="10" y1="108" x2="10" y2="164" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="108" x2="16" y2="108" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="164" x2="16" y2="164" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="139" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,139)">Block 2</text>
   <rect x="18" y="108" width="90" height="56" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="63" y="130" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
+  <text x="63" y="129" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="63" y="143" text-anchor="middle" fill="#8b949e" font-size="7">Block 2 = Plot 2</text>
   <rect x="118" y="108" width="90" height="56" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="163" y="130" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
+  <text x="163" y="129" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
+  <text x="163" y="143" text-anchor="middle" fill="#8b949e" font-size="7">Block 2 = Plot 2</text>
   <line x1="10" y1="108" x2="10" y2="164" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="108" x2="16" y2="108" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="10" y1="164" x2="16" y2="164" stroke="#8b949e" stroke-width="1.5"/>
@@ -159,15 +177,21 @@ get_layout_svg <- function(case_num, v) {
   <rect x="240" y="148" width="260" height="36" rx="5" fill="#f0a83220" stroke="#f0a832" stroke-width="1"/>
   <text x="370" y="163" text-anchor="middle" fill="#f0a832" font-size="9">⚠ Treatment confounded with space</text>
   <text x="370" y="177" text-anchor="middle" fill="#f0a832" font-size="9">→ LMM accounts for this</text>
+  <rect x="18" y="172" width="190" height="26" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1"/>
+  <text x="113" y="187" text-anchor="middle" fill="#00d4aa" font-size="8">lmer(Yield ~ Site + (1|Site:Block))</text>
 </svg>', site_l, site_l, block_l, block_l, site_l, block_l, site_l),
 
     "2" = sprintf('
 <svg viewBox="0 0 540 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
-  <text x="270" y="15" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Multiple Rows Within Plot</text>
+  <text x="270" y="15" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Multiple Rows</text>
   <rect x="18" y="24" width="200" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
-  <text x="118" y="34" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels (AV only)</text>
+  <text x="118" y="34" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
+  <line x1="10" y1="42" x2="10" y2="128" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="42" x2="16" y2="42" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="128" x2="16" y2="128" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="85" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,85)">Block 1</text>
   <rect x="18" y="42" width="200" height="86" rx="6" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="118" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
+  <text x="118" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV (Block 1 = Plot 1)</text>
   <rect x="22" y="60" width="192" height="22" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
   <text x="118" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side1</text>
   <rect x="22" y="84" width="192" height="22" rx="3" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
@@ -175,21 +199,17 @@ get_layout_svg <- function(case_num, v) {
   <rect x="22" y="108" width="192" height="16" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
   <text x="118" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side2</text>
   <rect x="228" y="42" width="200" height="86" rx="6" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="328" y="56" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control Site</text>
+  <text x="328" y="56" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control (Block 1 = Plot 1)</text>
   <rect x="232" y="60" width="192" height="22" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
   <text x="328" y="75" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side1</text>
   <rect x="232" y="84" width="192" height="22" rx="3" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
   <text x="328" y="99" text-anchor="middle" fill="#00d4aa" font-size="8">%s = Middle</text>
   <rect x="232" y="108" width="192" height="16" rx="3" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
   <text x="328" y="120" text-anchor="middle" fill="#58a6ff" font-size="8">%s = Side2</text>
-  <line x1="8" y1="42" x2="8" y2="128" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="8" y1="42" x2="14" y2="42" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="8" y1="128" x2="14" y2="128" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="4" y="88" text-anchor="end" fill="#8b949e" font-size="8">%s</text>
-  <text x="18" y="150" fill="#8b949e" font-size="9">Random: (1|%s) + (1|%s:%s)</text>
-  <text x="18" y="164" fill="#8b949e" font-size="9">Fixed:  %s + %s + %s:%s</text>
-  <rect x="18" y="174" width="500" height="26" rx="5" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1"/>
-  <text x="268" y="189" text-anchor="middle" fill="#58a6ff" font-size="9">Row position captures shading gradient under solar panels</text>
+
+
+  <rect x="18" y="140" width="410" height="26" rx="5" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1"/>
+  <text x="223" y="155" text-anchor="middle" fill="#58a6ff" font-size="9">lmer(Yield ~ Site + Row + Site:Row + (1|Block) + (1|Block:Row))</text>
 </svg>', row_l, row_l, row_l, row_l, row_l, row_l, block_l,
     block_l, block_l, row_l, site_l, row_l, site_l, row_l),
 
@@ -200,14 +220,17 @@ get_layout_svg <- function(case_num, v) {
   <text x="133" y="33" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">%s = 1</text>
   <rect x="18" y="40" width="100" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
   <text x="68" y="50" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
+  <line x1="10" y1="56" x2="10" y2="110" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="56" x2="16" y2="56" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="110" x2="16" y2="110" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="83" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,83)">Block 1</text>
   <rect x="18" y="56" width="100" height="54" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="68" y="76" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="68" y="73" text-anchor="middle" fill="#ff6b6b" font-size="8" font-weight="bold">AV</text>
+  <text x="68" y="85" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
   <rect x="128" y="56" width="100" height="54" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="178" y="76" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
-  <line x1="8" y1="56" x2="8" y2="110" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="8" y1="56" x2="14" y2="56" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="8" y1="110" x2="14" y2="110" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="4" y="86" text-anchor="end" fill="#8b949e" font-size="8">%s</text>
+  <text x="178" y="73" text-anchor="middle" fill="#00d4aa" font-size="8" font-weight="bold">Control</text>
+  <text x="178" y="85" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
+
   <line x1="256" y1="83" x2="278" y2="83" stroke="#3fb950" stroke-width="2" stroke-dasharray="4,3"/>
   <text x="267" y="79" text-anchor="middle" fill="#3fb950" font-size="9">→</text>
   <rect x="290" y="22" width="230" height="13" rx="4" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
@@ -215,18 +238,19 @@ get_layout_svg <- function(case_num, v) {
   <rect x="290" y="40" width="100" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
   <text x="340" y="50" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
   <rect x="290" y="56" width="100" height="54" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="340" y="76" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
+  <text x="340" y="73" text-anchor="middle" fill="#ff6b6b" font-size="8" font-weight="bold">AV</text>
+  <text x="340" y="85" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
   <rect x="400" y="56" width="100" height="54" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="450" y="76" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
-  <line x1="280" y1="56" x2="280" y2="110" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="280" y1="56" x2="286" y2="56" stroke="#8b949e" stroke-width="1.5"/>
-  <line x1="280" y1="110" x2="286" y2="110" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="276" y="86" text-anchor="end" fill="#8b949e" font-size="8">%s</text>
-  <text x="18" y="130" fill="#8b949e" font-size="9">Random: (1|%s)</text>
-  <text x="18" y="144" fill="#8b949e" font-size="9">Fixed:  %s + %s + %s:%s</text>
-  <rect x="18" y="154" width="500" height="36" rx="6" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
-  <text x="268" y="169" text-anchor="middle" fill="#3fb950" font-size="9">Same plots measured across seasons</text>
-  <text x="268" y="183" text-anchor="middle" fill="#3fb950" font-size="9">Block random effect absorbs spatial heterogeneity</text>
+  <text x="450" y="73" text-anchor="middle" fill="#00d4aa" font-size="8" font-weight="bold">Control</text>
+  <text x="450" y="85" text-anchor="middle" fill="#8b949e" font-size="7">Block 1 = Plot 1</text>
+
+
+  <rect x="18" y="120" width="500" height="26" rx="5" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
+  <text x="268" y="132" text-anchor="middle" fill="#3fb950" font-size="8" font-weight="bold">Annual crop:</text>
+  <text x="268" y="143" text-anchor="middle" fill="#3fb950" font-size="8">lmer(Yield ~ Season + Site + Season:Site + (1|Block))</text>
+  <rect x="18" y="150" width="500" height="26" rx="5" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1"/>
+  <text x="268" y="162" text-anchor="middle" fill="#58a6ff" font-size="8" font-weight="bold">Perennial crop:</text>
+  <text x="268" y="173" text-anchor="middle" fill="#58a6ff" font-size="8">lmer(Yield ~ Season + Site + Season:Site + (1|Block) + (1|Block:Season))</text>
 </svg>', season_l, block_l, season_l, block_l,
     block_l, season_l, site_l, season_l, site_l),
 
@@ -234,9 +258,9 @@ get_layout_svg <- function(case_num, v) {
 <svg viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="280" y="14" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Multiple Cultivars · Single Row</text>
   <rect x="18" y="22" width="240" height="12" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
-  <text x="138" y="32" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels (AV)</text>
+  <text x="138" y="32" text-anchor="middle" fill="#f0a832" font-size="8">☀ Solar Panels</text>
   <rect x="18" y="40" width="240" height="80" rx="6" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
-  <text x="138" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV Site</text>
+  <text x="138" y="56" text-anchor="middle" fill="#ff6b6b" font-size="9" font-weight="bold">AV</text>
   <rect x="26" y="62" width="106" height="50" rx="5" fill="#bc8cff22" stroke="#bc8cff" stroke-width="1.2"/>
   <text x="79" y="82" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="bold">%s = cv1</text>
   <text x="79" y="96" text-anchor="middle" fill="#8b949e" font-size="8">Block I~IV</text>
@@ -244,7 +268,7 @@ get_layout_svg <- function(case_num, v) {
   <text x="193" y="82" text-anchor="middle" fill="#f0a832" font-size="9" font-weight="bold">%s = cv2</text>
   <text x="193" y="96" text-anchor="middle" fill="#8b949e" font-size="8">Block I~IV</text>
   <rect x="296" y="40" width="240" height="80" rx="6" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
-  <text x="416" y="56" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control Site</text>
+  <text x="416" y="56" text-anchor="middle" fill="#00d4aa" font-size="9" font-weight="bold">Control</text>
   <rect x="304" y="62" width="106" height="50" rx="5" fill="#bc8cff22" stroke="#bc8cff" stroke-width="1.2"/>
   <text x="357" y="82" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="bold">%s = cv1</text>
   <text x="357" y="96" text-anchor="middle" fill="#8b949e" font-size="8">Block I~IV</text>
@@ -322,7 +346,67 @@ get_layout_svg <- function(case_num, v) {
   )
   
   # Cases 4, 6, 7 use simplified versions of nearby cases
-  if (case_num == 4) return(svgs[["2"]])
+  svg4 <- '
+<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;font-family:monospace">
+  <text x="280" y="15" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Single Crop · Multiple Rows · Multiple Seasons</text>
+  <rect x="18" y="22" width="240" height="12" rx="3" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
+  <text x="138" y="32" text-anchor="middle" fill="#3fb950" font-size="8">Season = 1</text>
+  <rect x="18" y="36" width="110" height="8" rx="2" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
+  <text x="73" y="44" text-anchor="middle" fill="#f0a832" font-size="7">☀ Solar Panels</text>
+  <line x1="10" y1="46" x2="10" y2="116" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="46" x2="16" y2="46" stroke="#8b949e" stroke-width="1.5"/>
+  <line x1="10" y1="116" x2="16" y2="116" stroke="#8b949e" stroke-width="1.5"/>
+  <text x="6" y="81" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,6,81)">Block 1</text>
+  <rect x="18" y="46" width="110" height="70" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="73" y="57" text-anchor="middle" fill="#ff6b6b" font-size="7" font-weight="bold">AV</text>
+  <text x="73" y="67" text-anchor="middle" fill="#8b949e" font-size="6">Block 1 = Plot 1</text>
+  <rect x="22" y="68" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="73" y="79" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side1</text>
+  <rect x="22" y="84" width="102" height="14" rx="2" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
+  <text x="73" y="95" text-anchor="middle" fill="#00d4aa" font-size="7">Row = Middle</text>
+  <rect x="22" y="100" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="73" y="111" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side2</text>
+  <rect x="136" y="46" width="110" height="70" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="191" y="57" text-anchor="middle" fill="#00d4aa" font-size="7" font-weight="bold">Control</text>
+  <text x="191" y="67" text-anchor="middle" fill="#8b949e" font-size="6">Block 1 = Plot 1</text>
+  <rect x="140" y="68" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="191" y="79" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side1</text>
+  <rect x="140" y="84" width="102" height="14" rx="2" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
+  <text x="191" y="95" text-anchor="middle" fill="#00d4aa" font-size="7">Row = Middle</text>
+  <rect x="140" y="100" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="191" y="111" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side2</text>
+  <text x="253" y="83" text-anchor="middle" fill="#3fb950" font-size="14">→</text>
+  <rect x="278" y="22" width="240" height="12" rx="3" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
+  <text x="398" y="32" text-anchor="middle" fill="#3fb950" font-size="8">Season = 2</text>
+  <rect x="278" y="36" width="110" height="8" rx="2" fill="#f0a83233" stroke="#f0a832" stroke-width="1"/>
+  <text x="333" y="44" text-anchor="middle" fill="#f0a832" font-size="7">☀ Solar Panels</text>
+  <rect x="278" y="46" width="110" height="70" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="333" y="57" text-anchor="middle" fill="#ff6b6b" font-size="7" font-weight="bold">AV</text>
+  <text x="333" y="67" text-anchor="middle" fill="#8b949e" font-size="6">Block 1 = Plot 1</text>
+  <rect x="282" y="68" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="333" y="79" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side1</text>
+  <rect x="282" y="84" width="102" height="14" rx="2" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
+  <text x="333" y="95" text-anchor="middle" fill="#00d4aa" font-size="7">Row = Middle</text>
+  <rect x="282" y="100" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="333" y="111" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side2</text>
+  <rect x="396" y="46" width="110" height="70" rx="5" fill="#00d4aa22" stroke="#00d4aa" stroke-width="1.5"/>
+  <text x="451" y="57" text-anchor="middle" fill="#00d4aa" font-size="7" font-weight="bold">Control</text>
+  <text x="451" y="67" text-anchor="middle" fill="#8b949e" font-size="6">Block 1 = Plot 1</text>
+  <rect x="400" y="68" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="451" y="79" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side1</text>
+  <rect x="400" y="84" width="102" height="14" rx="2" fill="#00d4aa22" stroke="#00d4aa" stroke-width="0.8"/>
+  <text x="451" y="95" text-anchor="middle" fill="#00d4aa" font-size="7">Row = Middle</text>
+  <rect x="400" y="100" width="102" height="14" rx="2" fill="#58a6ff22" stroke="#58a6ff" stroke-width="0.8"/>
+  <text x="451" y="111" text-anchor="middle" fill="#58a6ff" font-size="7">Row = Side2</text>
+  <rect x="18" y="130" width="500" height="26" rx="5" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
+  <text x="268" y="141" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="bold">Annual crop:</text>
+  <text x="268" y="151" text-anchor="middle" fill="#3fb950" font-size="7">lmer(Yield ~ Season + Site + Row + Season:Site + Season:Row + Season:Site:Row + (1|Block) + (1|Block:Season) + (1|Block:Row))</text>
+  <rect x="18" y="158" width="500" height="26" rx="5" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1"/>
+  <text x="268" y="169" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="bold">Perennial crop:</text>
+  <text x="268" y="179" text-anchor="middle" fill="#58a6ff" font-size="7">lmer(Yield ~ Season + Site + Row + Season:Site + Season:Row + Season:Site:Row + (1|Block) + (1|Block:Season) + (1|Block:Row) + (1|Block:Season:Row))</text>
+</svg>'
+
+  if (case_num == 4) return(svg4)
   if (case_num == 6) return(svgs[["5"]])
   if (case_num == 7) return(svgs[["3"]])
   
@@ -414,7 +498,18 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 column(4, selectInput("sel_plot",     "Plot",      choices = c("— not used —" = "none"))),
-                column(4, selectInput("sel_location", "Location",  choices = c("— not used —" = "none")))
+                column(8, conditionalPanel(
+                  condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row == 'none'",
+                  div(style = "margin-top: 25px;",
+                    checkboxInput("is_perennial",
+                      "Perennial crop (same plants measured across seasons → adds (1|Block:Season))",
+                      value = FALSE))),
+                conditionalPanel(
+                  condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row != 'none'",
+                  div(style = "margin-top: 25px;",
+                    checkboxInput("is_perennial_row",
+                      "Perennial crop (same plants measured across seasons → adds (1|Block:Season:Row))",
+                      value = FALSE))))
               ),
               hr(),
               div(class = "section-title", "Detected Model Formula"),
@@ -478,7 +573,6 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_row",       choices = opt_choices)
     updateSelectInput(session, "sel_season",    choices = opt_choices)
     updateSelectInput(session, "sel_plot",      choices = opt_choices)
-    updateSelectInput(session, "sel_location",  choices = opt_choices)
     
     # Auto-detect
     auto <- list(
@@ -488,8 +582,7 @@ server <- function(input, output, session) {
       sel_genotype = c("genotype","cultivar","variety","cv","geno"),
       sel_row      = c("row","rows"),
       sel_season   = c("season","year"),
-      sel_plot     = c("plot"),
-      sel_location = c("location","loc","field")
+      sel_plot     = c("plot")
     )
     for (sel_id in names(auto)) {
       for (col in cols) {
@@ -519,7 +612,8 @@ server <- function(input, output, session) {
       row      = input$sel_row,
       season   = input$sel_season,
       plot     = input$sel_plot,
-      location = input$sel_location
+      is_perennial = isTRUE(input$is_perennial),
+      is_perennial_row = isTRUE(input$is_perennial_row)
     )
   })
   
@@ -569,8 +663,7 @@ server <- function(input, output, session) {
       if(v$genotype != "none") v$genotype else NULL,
       if(v$row      != "none") v$row      else NULL,
       if(v$season   != "none") v$season   else NULL,
-      if(v$plot     != "none") v$plot     else NULL,
-      if(v$location != "none") v$location else NULL
+      if(v$plot     != "none") v$plot     else NULL
     ))
     for (col in check_cols) {
       n_levels <- length(unique(na.omit(df[[col]])))
@@ -586,7 +679,7 @@ server <- function(input, output, session) {
                   if(v$row      != "none") v$row,
                   if(v$season   != "none") v$season,
                   if(v$plot     != "none") v$plot,
-                  if(v$location != "none") v$location)
+                  NULL)
     for (col in fac_cols) df[[col]] <- as.factor(df[[col]])
     df[[v$y]] <- as.numeric(df[[v$y]])
     
