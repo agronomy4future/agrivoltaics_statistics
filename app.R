@@ -103,11 +103,13 @@ build_formula <- function(v) {
       c(sprintf("(1|%s)", v$block),
         sprintf("(1|%s)", v$plot),
         sprintf("(1|%s:%s)", v$block, v$season),
+        if (isTRUE(v$is_perennial_case8)) sprintf("(1|%s:%s)", v$plot, v$season),
         sprintf("(1|%s:%s)", v$plot, v$row))
     else
       c(sprintf("(1|%s)", v$block),
         sprintf("(1|%s:%s)", v$block, v$genotype),
         sprintf("(1|%s:%s)", v$block, v$season),
+        if (isTRUE(v$is_perennial_case8)) sprintf("(1|%s:%s:%s)", v$block, v$genotype, v$season),
         sprintf("(1|%s:%s:%s)", v$block, v$genotype, v$row))
   }
   
@@ -280,14 +282,14 @@ get_layout_svg <- function(case_num, v) {
     site_l, geno_l, block_l, site_l, geno_l, site_l, geno_l),
 
     "8" = sprintf('
-<svg viewBox="0 0 580 250" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
+<svg viewBox="0 0 580 280" xmlns="http://www.w3.org/2000/svg" style="max-width:100%%;font-family:monospace">
   <text x="290" y="13" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="bold">Multiple Cultivars · Multiple Rows · Multiple Seasons</text>
   <rect x="16" y="20" width="262" height="12" rx="3" fill="#3fb95033" stroke="#3fb950" stroke-width="1"/>
   <text x="147" y="30" text-anchor="middle" fill="#3fb950" font-size="8">%s = 1</text>
   <line x1="8" y1="36" x2="8" y2="136" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="8" y1="36" x2="14" y2="36" stroke="#8b949e" stroke-width="1.5"/>
   <line x1="8" y1="136" x2="14" y2="136" stroke="#8b949e" stroke-width="1.5"/>
-  <text x="4" y="86" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,4,86)">Block</text>
+  <text x="4" y="86" text-anchor="middle" fill="#8b949e" font-size="7" transform="rotate(-90,4,86)">Block 1</text>
   <rect x="16" y="36" width="120" height="100" rx="5" fill="#ff6b6b22" stroke="#ff6b6b" stroke-width="1.2"/>
   <text x="76" y="50" text-anchor="middle" fill="#ff6b6b" font-size="8" font-weight="bold">AV</text>
   <rect x="22" y="54" width="52" height="76" rx="3" fill="#bc8cff22" stroke="#bc8cff" stroke-width="0.8"/>
@@ -333,18 +335,16 @@ get_layout_svg <- function(case_num, v) {
   <text x="458" y="66" text-anchor="middle" fill="#bc8cff" font-size="7">cv1</text>
   <rect x="488" y="54" width="52" height="76" rx="3" fill="#f0a83233" stroke="#f0a832" stroke-width="0.8"/>
   <text x="514" y="66" text-anchor="middle" fill="#f0a832" font-size="7">cv2</text>
-  <text x="16" y="152" fill="#8b949e" font-size="8">Random: (1|Block) + (1|Plot) + (1|Block:Season) + (1|Plot:Row)</text>
-  <text x="16" y="165" fill="#8b949e" font-size="8">Fixed:  %s + %s + %s + %s + %s:%s:%s + %s:%s:%s:%s</text>
-  <rect x="16" y="174" width="544" height="58" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
-  <text x="288" y="188" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="bold">Most complex layout — multiple cultivars, rows, and seasons</text>
-  <text x="288" y="201" text-anchor="middle" fill="#8b949e" font-size="9">Plot:Row captures spatial variation across row positions within plot</text>
-  <text x="288" y="214" text-anchor="middle" fill="#8b949e" font-size="9">Seasons are independent · Block:Season accounts for spatial variation that differs between seasons</text>
-  <text x="288" y="228" text-anchor="middle" fill="#f0a832" font-size="8">Plot is optional: if each plot contains one genotype per block,</text>
-  <text x="288" y="240" text-anchor="middle" fill="#f0a832" font-size="8">(1|Block:Genotype) and (1|Block:Genotype:Row) are equivalent to (1|Plot) and (1|Plot:Row)</text>
+  <text x="8" y="149" fill="#00d4aa" font-size="7">lmer(Yield ~ Site + Cultivar + Season + Row + Site:Cultivar:Season + Site:Cultivar:Season:Row +</text>
+  <text x="8" y="160" fill="#00d4aa" font-size="7">(1|Block) + (1|Plot) + (1|Block:Season) + (1|Plot:Row), data = df)</text>
+  <rect x="16" y="168" width="544" height="100" rx="6" fill="#1c2230" stroke="#2a3441" stroke-width="1"/>
+  <text x="288" y="182" text-anchor="middle" fill="#e6edf3" font-size="9" font-weight="bold">Most complex layout — multiple cultivars, rows, and seasons</text>
+  <text x="288" y="195" text-anchor="middle" fill="#8b949e" font-size="9">Plot:Row captures spatial variation across row positions within plot</text>
+  <text x="288" y="208" text-anchor="middle" fill="#8b949e" font-size="9">Seasons are independent · Block:Season accounts for spatial variation that differs between seasons</text>
+  <text x="288" y="222" text-anchor="middle" fill="#f0a832" font-size="8">Plot is optional: if each plot contains one genotype per block,</text>
+  <text x="288" y="236" text-anchor="middle" fill="#f0a832" font-size="8">(1|Block:Cultivar) and (1|Block:Cultivar:Row) are equivalent to (1|Plot) and (1|Plot:Row)</text>
 </svg>', season_l, season_l,
-    site_l, geno_l, season_l, row_l,
-    site_l, geno_l, season_l,
-    site_l, geno_l, season_l, row_l)
+    season_l, season_l)
   )
   
   # Cases 4, 6, 7 use simplified versions of nearby cases
@@ -608,10 +608,16 @@ ui <- dashboardPage(
                       "Perennial crop (same plants measured across seasons → adds (1|Block:Season))",
                       value = FALSE))),
                 conditionalPanel(
-                  condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row != 'none'",
+                  condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row != 'none' && input.sel_genotype == 'none'",
                   div(style = "margin-top: 25px;",
                     checkboxInput("is_perennial_row",
                       "Perennial crop (same plants measured across seasons → adds (1|Block:Season:Row))",
+                      value = FALSE))),
+                conditionalPanel(
+                  condition = "input.sel_season != 'none' && input.sel_season != '' && input.sel_row != 'none' && input.sel_genotype != 'none'",
+                  div(style = "margin-top: 10px;",
+                    checkboxInput("is_perennial_case8",
+                      "Perennial crop (same plants measured across seasons → adds (1|Plot:Season))",
                       value = FALSE))))
               ),
               hr(),
@@ -716,7 +722,9 @@ server <- function(input, output, session) {
       season   = input$sel_season,
       plot     = input$sel_plot,
       is_perennial = isTRUE(input$is_perennial),
-      is_perennial_row = isTRUE(input$is_perennial_row)
+      is_perennial_row = isTRUE(input$is_perennial_row),
+      is_perennial_case8 = isTRUE(input$is_perennial_case8),
+      is_perennial_case8 = isTRUE(input$is_perennial_case8)
     )
   })
   
