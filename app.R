@@ -53,7 +53,6 @@ build_formula <- function(v) {
   ROW1     <- if (has("row"))      v$row      else NULL
   SEASON   <- if (has("season"))   v$season   else NULL
   GENO     <- if (has("genotype")) v$genotype else NULL
-  LOC      <- if (has("location")) v$location else NULL
 
   block_dep   <- isTRUE(v$block_type == "dependent")
   has_rep     <- isTRUE(v$has_replicates)
@@ -203,14 +202,6 @@ build_formula <- function(v) {
     )
   }
 
-  # ── Location modifier (if provided)
-  if (!is.null(LOC)) {
-    if (has_rep) {
-      random <- c(random, sprintf("(1|%s:%s)", LOC, BLK))
-    }
-    fixed <- c(fixed, LOC)
-  }
-
   # ── assemble formula string
   use_lm <- !has_rep
 
@@ -337,9 +328,6 @@ ui <- dashboardPage(
                 column(4, selectInput("sel_row",      "Row",      choices = c("— not used —" = "none"))),
                 column(4, selectInput("sel_season",   "Season",   choices = c("— not used —" = "none")))
               ),
-              fluidRow(
-                column(4, selectInput("sel_location", "Location", choices = c("— not used —" = "none")))
-              ),
 
               # ── Block structure
               div(class = "section-title", "Block Structure"),
@@ -432,7 +420,6 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_genotype",  choices = opt_ch)
     updateSelectInput(session, "sel_row",       choices = opt_ch)
     updateSelectInput(session, "sel_season",    choices = opt_ch)
-    updateSelectInput(session, "sel_location",  choices = opt_ch)
 
     # Auto-detect columns
     auto <- list(
@@ -441,8 +428,7 @@ server <- function(input, output, session) {
       sel_block    = c("block","rep","replicate"),
       sel_genotype = c("genotype","cultivar","variety","cv","geno"),
       sel_row      = c("row","row1"),
-      sel_season   = c("season","year"),
-      sel_location = c("location","loc","field")
+      sel_season   = c("season","year")
     )
     for (sel_id in names(auto)) {
       for (col in cols) {
@@ -501,7 +487,6 @@ server <- function(input, output, session) {
       genotype    = if (!is.null(input$sel_genotype)) input$sel_genotype else "none",
       row         = if (!is.null(input$sel_row))      input$sel_row      else "none",
       season      = if (!is.null(input$sel_season))   input$sel_season   else "none",
-      location    = if (!is.null(input$sel_location)) input$sel_location else "none",
       block_type  = input$block_type,
       has_replicates = (input$has_replicates == "yes"),
       crop_type   = if (!is.null(input$crop_type)) input$crop_type else "annual",
@@ -579,8 +564,7 @@ server <- function(input, output, session) {
       v$site, v$block,
       if (v$genotype != "none") v$genotype,
       if (v$row      != "none") v$row,
-      if (v$season   != "none") v$season,
-      if (v$location != "none") v$location
+      if (v$season   != "none") v$season
     ))
     # Also add block1 if dependent
     if (v$block_type == "dependent") fac_cols <- unique(c(fac_cols, v$block1))
