@@ -166,6 +166,92 @@ build_formula <- function(v) {
 # ─────────────────────────────────────────────
 #  LAYOUT SVG GENERATOR
 # ─────────────────────────────────────────────
+
+# ─────────────────────────────────────────────
+#  HELPER FUNCTIONS
+# ─────────────────────────────────────────────
+round_df <- function(df, digits=3) {
+  num_cols <- sapply(df, is.numeric)
+  df[num_cols] <- lapply(df[num_cols], round, digits=digits)
+  df
+}
+
+make_posthoc_plot <- function(model, df, term, y_col) {
+  em  <- emmeans(model, as.formula(paste("~", term)))
+  cld <- as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))
+  cld$.group <- trimws(cld$.group)
+  term_vars <- trimws(unlist(strsplit(term, ":")))
+  x_var    <- term_vars[1]
+  fill_var <- if (length(term_vars) >= 2) term_vars[2] else NULL
+  if (!x_var %in% colnames(cld)) x_var <- colnames(cld)[1]
+  p <- ggplot(cld, aes(
+        x    = .data[[x_var]],
+        y    = emmean,
+        fill = if (!is.null(fill_var)) .data[[fill_var]] else .data[[x_var]])) +
+    geom_bar(stat="identity", position=position_dodge(0.7),
+             width=0.6, alpha=0.85) +
+    geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
+                  position=position_dodge(0.7), width=0.2) +
+    geom_text(aes(label=.group, y=upper.CL),
+              position=position_dodge(0.7), vjust=-0.5, size=4) +
+    scale_fill_manual(values=c("#ff6b6b","#00d4aa","#58a6ff",
+                                "#bc8cff","#f0a832","#3fb950")) +
+    labs(x=x_var,
+         y=paste("Estimated Marginal Mean of", y_col),
+         title=paste("Post-hoc comparison:", term),
+         fill=if (!is.null(fill_var)) fill_var else x_var) +
+    theme_classic(base_size=14) +
+    theme(legend.position=if (!is.null(fill_var)) "top" else "none")
+  print(p)
+}
+
+run_analysis_for_df <- function(df_loc, v) {
+  result <- build_formula(v)
+  # 모든 문자형 컬럼 factor 변환
+  for (col in colnames(df_loc))
+    if (is.character(df_loc[[col]])) df_loc[[col]] <- as.factor(df_loc[[col]])
+  fac_cols <- unique(c(v$site, v$block,
+    if (v$genotype != "none") v$genotype,
+    if (v$row      != "none") v$row,
+    if (v$season   != "none") v$season))
+  for (col in fac_cols)
+    if (col %in% colnames(df_loc)) df_loc[[col]] <- droplevels(as.factor(df_loc[[col]]))
+  df_loc[[v$y]] <- as.numeric(df_loc[[v$y]])
+  formula_obj <- as.formula(result$formula_str)
+  model <- if (result$model_fn == "lm") {
+    tryCatch(lm(formula_obj, data=df_loc),
+             error=function(e) stop(paste("lm() failed:", e$message)))
+  } else {
+    tryCatch(lmer(formula_obj, data=df_loc, REML=TRUE),
+             error=function(e) stop(paste("lmer() failed:", e$message)))
+  }
+  vc_tbl <- if (result$model_fn == "lmer") {
+    vc <- as.data.frame(VarCorr(model))
+    vc_total <- sum(vc$vcov)
+    vc$pct  <- round(vc$vcov / vc_total * 100, 2)
+    vc$vcov <- round(vc$vcov, 3)
+    setNames(vc[, c("grp","vcov","pct")], c("Groups","Variance","% of Total"))
+  } else NULL
+  anova_tbl <- as.data.frame(
+    if (result$model_fn == "lmer") anova(model, type=3) else anova(model))
+  anova_tbl <- round(anova_tbl, 4)
+  p_col <- if ("Pr(>F)" %in% colnames(anova_tbl)) "Pr(>F)" else NULL
+  if (!is.null(p_col))
+    anova_tbl$Sig <- ifelse(anova_tbl[[p_col]]<0.001,"***",
+                     ifelse(anova_tbl[[p_col]]<0.01, "**",
+                     ifelse(anova_tbl[[p_col]]<0.05, "*",
+                     ifelse(anova_tbl[[p_col]]<0.1,  ".", "ns"))))
+  fixed_terms       <- trimws(unlist(strsplit(paste(result$fixed, collapse="+"), "\\+")))
+  interaction_terms <- fixed_terms[grepl(":", fixed_terms)]
+  default_term      <- if (length(interaction_terms) > 0)
+                         interaction_terms[which.max(nchar(interaction_terms))]
+                       else v$site
+  list(model=model, vc_tbl=vc_tbl, anova_tbl=anova_tbl,
+       anova_terms=rownames(anova_tbl), default_term=default_term,
+       formula_str=result$formula_str, model_fn=result$model_fn,
+       case_num=result$case_num, warnings=result$warnings, v=v, df=df_loc)
+}
+
 get_layout_svg <- function(case_num, v) {
   has <- function(k) !is.null(v[[k]]) && v[[k]] != "" && v[[k]] != "none"
   site_l   <- if(has("site"))     v$site     else "Site"
@@ -614,10 +700,12 @@ ui <- dashboardPage(
               ),
               div(class="section-title", "Optional Variables"),
               fluidRow(
-                column(4, selectInput("sel_genotype","Genotype", choices=c("— not used —"="none"))),
-                column(4, selectInput("sel_row",     "Row",      choices=c("— not used —"="none"))),
-                column(4, selectInput("sel_season",  "Season",   choices=c("— not used —"="none")))
+                column(3, selectInput("sel_genotype","Genotype",  choices=c("— not used —"="none"))),
+                column(3, selectInput("sel_row",     "Row",       choices=c("— not used —"="none"))),
+                column(3, selectInput("sel_season",  "Season",    choices=c("— not used —"="none"))),
+                column(3, selectInput("sel_location","Location",  choices=c("— not used —"="none")))
               ),
+              uiOutput("location_info_ui"),
               div(class="section-title", "Subset Data (Optional)"),
               uiOutput("subset_block_ui"),
               uiOutput("subset_genotype_ui"),
@@ -815,6 +903,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_genotype",  choices=opt_ch)
     updateSelectInput(session, "sel_row",       choices=opt_ch)
     updateSelectInput(session, "sel_season",    choices=opt_ch)
+    updateSelectInput(session, "sel_location",  choices=opt_ch)
 
   })
 
@@ -849,6 +938,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_genotype",  choices=opt_ch)
     updateSelectInput(session, "sel_row",       choices=opt_ch)
     updateSelectInput(session, "sel_season",    choices=opt_ch)
+    updateSelectInput(session, "sel_location",  choices=opt_ch)
   }, ignoreInit = TRUE)
 
   output$preview_table <- renderDT({
@@ -1032,6 +1122,22 @@ server <- function(input, output, session) {
     }
   }, ignoreNULL=FALSE)
 
+  # ── Location info UI
+  output$location_info_ui <- renderUI({
+    req(input$sel_location)
+    if (is.null(input$sel_location) || input$sel_location == "none") return(NULL)
+    col <- input$sel_location
+    req(rv$df)
+    if (!col %in% colnames(rv$df)) return(NULL)
+    locs <- sort(unique(as.character(rv$df[[col]])))
+    div(class="info-notice", style="background:#e8f4e8;border-color:#00a882;margin-top:6px;",
+        icon("map-marker-alt"),
+        sprintf("  %d location(s) detected: %s", length(locs), paste(locs, collapse=", ")), br(),
+        "→ Results will be shown separately per location in Step 03.", br(),
+        "→ A Location Comparison tab will be added automatically."
+    )
+  })
+
   get_vars <- reactive({
     has_season <- !is.null(input$sel_season) && input$sel_season != "none"
     n_season   <- 0L
@@ -1044,6 +1150,7 @@ server <- function(input, output, session) {
       genotype       = if (!is.null(input$sel_genotype)) input$sel_genotype else "none",
       row            = if (!is.null(input$sel_row))      input$sel_row      else "none",
       season         = if (!is.null(input$sel_season))   input$sel_season   else "none",
+      location       = if (!is.null(input$sel_location)) input$sel_location else "none",
       block_type     = input$block_type,
       has_replicates = (input$has_replicates == "yes"),
       crop_type      = if (!is.null(input$crop_type)) input$crop_type else "annual",
@@ -1082,272 +1189,335 @@ server <- function(input, output, session) {
     req(rv$df)
     v <- get_vars()
     req(nzchar(v$y), nzchar(v$site), nzchar(v$block))
-    df     <- filtered_df()
-    result <- build_formula(v)
-    fac_cols <- unique(c(v$site, v$block,
-      if (v$genotype!="none") v$genotype,
-      if (v$row     !="none") v$row,
-      if (v$season  !="none") v$season))
-    for (col in fac_cols)
-      if (col %in% colnames(df)) df[[col]] <- as.factor(df[[col]])
-    df[[v$y]] <- as.numeric(df[[v$y]])
-    formula_obj <- as.formula(result$formula_str)
-    model <- if (result$model_fn=="lm") {
-      tryCatch(lm(formula_obj, data=df), error=function(e) stop(paste("lm() failed:", e$message)))
+    df_base <- filtered_df()
+
+    has_loc <- !is.null(v$location) && v$location != "none" &&
+               v$location %in% colnames(df_base)
+
+    if (!has_loc) {
+      res <- tryCatch(run_analysis_for_df(df_base, v),
+                      error=function(e) stop(e$message))
+      return(list(mode="single", result=res))
     } else {
-      tryCatch(lmer(formula_obj, data=df, REML=TRUE), error=function(e) stop(paste("lmer() failed:", e$message)))
+      locs <- sort(unique(as.character(df_base[[v$location]])))
+      loc_results <- lapply(locs, function(loc) {
+        df_loc <- df_base[as.character(df_base[[v$location]]) == loc, ]
+        tryCatch(run_analysis_for_df(df_loc, v),
+                 error=function(e) list(error=e$message, loc=loc))
+      })
+      names(loc_results) <- locs
+
+      loc_compare <- tryCatch({
+        df_cmp <- as.data.frame(df_base, stringsAsFactors=FALSE)
+        # y 컬럼 numeric 변환
+        df_cmp[[v$y]] <- as.numeric(as.character(df_cmp[[v$y]]))
+        # 모든 컬럼 강제 factor 변환 (y 제외)
+        for (col in colnames(df_cmp))
+          if (col != v$y) df_cmp[[col]] <- factor(as.character(df_cmp[[col]]))
+        # 디버그: str 출력
+        message("DEBUG df_cmp str:")
+        message(paste(capture.output(str(df_cmp)), collapse="
+"))
+        cmp_formula <- as.formula(sprintf(
+          "%s ~ %s + %s + (1|%s:%s)",
+          v$y, v$site, v$location, v$location, v$block))
+        message("DEBUG formula: ", deparse(cmp_formula))
+        cmp_model <- lmer(cmp_formula, data=df_cmp, REML=TRUE)
+        message("DEBUG model fitted OK")
+        cmp_anova <- as.data.frame(anova(cmp_model, type=3))
+        message("DEBUG anova OK")
+        cmp_anova <- round(cmp_anova, 4)
+        message("DEBUG starting emmeans loc")
+        p_col <- if ("Pr(>F)" %in% colnames(cmp_anova)) "Pr(>F)" else NULL
+        if (!is.null(p_col))
+          cmp_anova$Sig <- ifelse(cmp_anova[[p_col]]<0.001,"***",
+                           ifelse(cmp_anova[[p_col]]<0.01,"**",
+                           ifelse(cmp_anova[[p_col]]<0.05,"*",
+                           ifelse(cmp_anova[[p_col]]<0.1,".","ns"))))
+        em_loc  <- as.data.frame(emmeans(cmp_model,
+                     as.formula(paste("~", v$location))))
+        em_site <- as.data.frame(emmeans(cmp_model,
+                     as.formula(paste("~", v$site))))
+        message("DEBUG emmeans OK, rounding...")
+        # numeric 컬럼만 round
+        em_loc  <- as.data.frame(lapply(em_loc,  function(x) if(is.numeric(x)) round(x,3) else x))
+        em_site <- as.data.frame(lapply(em_site, function(x) if(is.numeric(x)) round(x,3) else x))
+        message("DEBUG round OK")
+        list(model=cmp_model, anova=cmp_anova,
+             em_loc=em_loc, em_site=em_site,
+             formula=deparse(cmp_formula), df=df_cmp,
+             loc_col=v$location, site_col=v$site, y_col=v$y)
+      }, error=function(e) list(error=e$message))
+
+      return(list(mode="multi", loc_results=loc_results,
+                  locs=locs, loc_compare=loc_compare, v=v))
     }
-    vc_tbl <- if (result$model_fn=="lmer") {
-      vc <- as.data.frame(VarCorr(model))
-      vc_total <- sum(vc$vcov)
-      vc$pct <- round(vc$vcov/vc_total*100, 2)
-      vc$vcov <- round(vc$vcov, 3)
-      setNames(vc[,c("grp","vcov","pct")], c("Groups","Variance","% of Total"))
-    } else NULL
-    anova_tbl <- as.data.frame(
-      if (result$model_fn=="lmer") anova(model, type=3) else anova(model))
-    anova_tbl <- round(anova_tbl, 4)
-    p_col <- if ("Pr(>F)" %in% colnames(anova_tbl)) "Pr(>F)" else NULL
-    if (!is.null(p_col))
-      anova_tbl$Sig <- ifelse(anova_tbl[[p_col]]<0.001,"***",
-                       ifelse(anova_tbl[[p_col]]<0.01,"**",
-                       ifelse(anova_tbl[[p_col]]<0.05,"*",
-                       ifelse(anova_tbl[[p_col]]<0.1,".","ns"))))
-    fixed_terms       <- trimws(unlist(strsplit(paste(result$fixed, collapse="+"),"\\+")))
-    interaction_terms <- fixed_terms[grepl(":", fixed_terms)]
-    default_term      <- if (length(interaction_terms)>0)
-                           interaction_terms[which.max(nchar(interaction_terms))]
-                         else v$site
-    anova_terms <- rownames(anova_tbl)
-    list(model=model, vc_tbl=vc_tbl, anova_tbl=anova_tbl,
-         anova_terms=anova_terms, default_term=default_term,
-         formula_str=result$formula_str,
-         model_fn=result$model_fn, case_num=result$case_num,
-         warnings=result$warnings, v=v, df=df)
   })
 
   output$results_ui <- renderUI({
-    result <- tryCatch(analysis_result(),
+    ar <- tryCatch(analysis_result(),
       error=function(e) {
         fluidRow(box(width=12, status="danger", title="Analysis Error",
           div(style="padding:16px;color:#c0392b;font-family:monospace;font-size:15px;",
               p(icon("exclamation-triangle"), strong(e$message)))))
       })
-    req(!is.null(result))
-    if (inherits(result,"shiny.tag.list")) return(result)
-    warn_tags <- lapply(result$warnings, function(w) div(class="warn-box", w))
-    tagList(fluidRow(
-      box(width=12, title="Step 03 — Analysis Results", status="success",
+    req(!is.null(ar))
+    if (inherits(ar, "shiny.tag.list")) return(ar)
+
+    # ── Single mode
+    if (!is.null(ar$mode) && ar$mode == "single") {
+      result <- ar$result
+      warn_tags <- lapply(result$warnings, function(w) div(class="warn-box", w))
+
+      output$vc_tbl_main <- renderDT({
+        req(result$vc_tbl)
+        datatable(result$vc_tbl,
+                  options=list(dom="t", pageLength=20, scrollX=TRUE),
+                  style="bootstrap", class="compact", rownames=FALSE)
+      })
+      output$anova_tbl_main <- renderDT({
+        datatable(result$anova_tbl,
+                  options=list(dom="t", pageLength=20, scrollX=TRUE),
+                  style="bootstrap", class="compact")
+      })
+      output$posthoc_ui_main <- renderUI({
+        tagList(
+          selectInput("posthoc_term_main", "Select term for post-hoc:",
+                      choices=result$anova_terms, selected=result$default_term),
+          DTOutput("posthoc_tbl_main"), br(),
+          plotOutput("posthoc_plot_main")
+        )
+      })
+      output$posthoc_tbl_main <- renderDT({
+        req(input$posthoc_term_main)
+        tryCatch({
+          em  <- emmeans(result$model,
+                         as.formula(paste("~", input$posthoc_term_main)))
+          cld <- as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))
+          cld <- round_df(cld)
+          datatable(cld, options=list(dom="t", scrollX=TRUE),
+                    style="bootstrap", class="compact", rownames=FALSE)
+        }, error=function(e)
+          datatable(data.frame(Error=e$message), options=list(dom="t")))
+      })
+      output$posthoc_plot_main <- renderPlot({
+        req(input$posthoc_term_main)
+        tryCatch(
+          make_posthoc_plot(result$model, result$df,
+                            input$posthoc_term_main, result$v$y),
+          error=function(e) NULL)
+      })
+      output$main_plot_main <- renderPlot({
+        tryCatch(
+          make_posthoc_plot(result$model, result$df,
+                            result$default_term, result$v$y),
+          error=function(e) NULL)
+      })
+
+      return(tagList(fluidRow(
+        box(width=12, title="Step 03 — Analysis Results", status="success",
+            div(class="case-badge",
+                paste0("📐 Case ", result$case_num, " — ",
+                       CASE_DESC[as.character(result$case_num)])),
+            if (length(warn_tags)) tagList(br(), warn_tags),
+            br(), br(),
+            tabsetPanel(
+              if (!is.null(result$vc_tbl))
+                tabPanel("Variance Components", br(),
+                         DTOutput("vc_tbl_main"), br()),
+              tabPanel("ANOVA Table",        br(), DTOutput("anova_tbl_main"), br()),
+              tabPanel("Post-hoc (emmeans)", br(), uiOutput("posthoc_ui_main"), br()),
+              tabPanel("Plot",               br(), plotOutput("main_plot_main"), br())
+            )
+        )
+      )))
+    }
+
+    # ── Multi mode
+    if (isTRUE(ar$mode == "multi")) {
+      locs    <- ar$locs
+      loc_res <- ar$loc_results
+      loc_cmp <- ar$loc_compare
+      v       <- ar$v
+
+      loc_tabs <- lapply(seq_along(locs), function(i) {
+        loc       <- locs[i]
+        res       <- loc_res[[loc]]
+        tab_id    <- paste0("loc", i)
+        anova_id  <- paste0("anova_", tab_id)
+        vc_id     <- paste0("vc_",    tab_id)
+        ph_ui_id  <- paste0("ph_ui_", tab_id)
+        ph_tbl_id <- paste0("ph_tbl_",tab_id)
+        ph_plt_id <- paste0("ph_plt_",tab_id)
+        plt_id    <- paste0("plt_",   tab_id)
+        sel_id    <- paste0("sel_",   tab_id)
+
+        if (!is.null(res$error)) {
+          return(tabPanel(loc,
+            div(class="warn-box",
+                sprintf("⚠ Analysis failed for %s: %s", loc, res$error))))
+        }
+
+        local({
+          .res       <- res
+          .anova_id  <- anova_id
+          .vc_id     <- vc_id
+          .ph_ui_id  <- ph_ui_id
+          .ph_tbl_id <- ph_tbl_id
+          .ph_plt_id <- ph_plt_id
+          .plt_id    <- plt_id
+          .sel_id    <- sel_id
+
+          output[[.vc_id]] <- renderDT({
+            req(.res$vc_tbl)
+            datatable(.res$vc_tbl,
+                      options=list(dom="t", pageLength=20, scrollX=TRUE),
+                      style="bootstrap", class="compact", rownames=FALSE)
+          })
+          output[[.anova_id]] <- renderDT({
+            datatable(.res$anova_tbl,
+                      options=list(dom="t", pageLength=20, scrollX=TRUE),
+                      style="bootstrap", class="compact")
+          })
+          output[[.ph_ui_id]] <- renderUI({
+            tagList(
+              selectInput(.sel_id, "Select term for post-hoc:",
+                          choices=.res$anova_terms, selected=.res$default_term),
+              DTOutput(.ph_tbl_id), br(),
+              plotOutput(.ph_plt_id)
+            )
+          })
+          output[[.ph_tbl_id]] <- renderDT({
+            req(input[[.sel_id]])
+            tryCatch({
+              em  <- emmeans(.res$model,
+                             as.formula(paste("~", input[[.sel_id]])))
+              cld <- as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))
+              cld <- round_df(cld)
+              datatable(cld, options=list(dom="t", scrollX=TRUE),
+                        style="bootstrap", class="compact", rownames=FALSE)
+            }, error=function(e)
+              datatable(data.frame(Error=e$message), options=list(dom="t")))
+          })
+          output[[.ph_plt_id]] <- renderPlot({
+            req(input[[.sel_id]])
+            tryCatch(
+              make_posthoc_plot(.res$model, .res$df,
+                                input[[.sel_id]], .res$v$y),
+              error=function(e) NULL)
+          })
+          output[[.plt_id]] <- renderPlot({
+            tryCatch(
+              make_posthoc_plot(.res$model, .res$df,
+                                .res$default_term, .res$v$y),
+              error=function(e) NULL)
+          })
+        })
+
+        warn_tags_loc <- lapply(res$warnings, function(w) div(class="warn-box", w))
+        tabPanel(loc,
           div(class="case-badge",
-              paste0("\U0001f4d0 Case ", result$case_num, " \u2014 ", CASE_DESC[as.character(result$case_num)])),
-          if (length(warn_tags)) tagList(br(), warn_tags),
-          br(), br(),
+              paste0("📐 Case ", res$case_num, " — ",
+                     CASE_DESC[as.character(res$case_num)])),
+          if (length(warn_tags_loc)) tagList(br(), warn_tags_loc),
+          br(),
+          div(class="formula-box",
+              paste0(if(res$model_fn=="lm") "lm(" else "lmer(",
+                     res$formula_str, ", data = df [", loc, "])")),
+          br(),
           tabsetPanel(
-            if (!is.null(result$vc_tbl))
-              tabPanel("Variance Components", br(), DTOutput("tbl_variance"), br(),
-                       plotOutput("plot_variance", height="300px")),
-            tabPanel("Type III ANOVA", br(), DTOutput("tbl_anova"), br(),
-                     plotOutput("plot_anova", height="300px")),
-            tabPanel("Post-hoc (emmeans)", br(),
-                     uiOutput("posthoc_selector"), br(),
-                     uiOutput("posthoc_title"),
-                     DTOutput("tbl_posthoc"), br(),
-                     plotOutput("plot_posthoc", height="380px")),
-            tabPanel("R Code",        br(), verbatimTextOutput("r_code")),
-            tabPanel("Model Summary", br(), verbatimTextOutput("model_summary"))
-          ))
-    ))
+            if (!is.null(res$vc_tbl))
+              tabPanel("Variance Components", br(), DTOutput(vc_id), br()),
+            tabPanel("ANOVA Table",        br(), DTOutput(anova_id), br()),
+            tabPanel("Post-hoc (emmeans)", br(), uiOutput(ph_ui_id), br()),
+            tabPanel("Plot",               br(), plotOutput(plt_id), br())
+          )
+        )
+      })
+
+      if (!is.null(loc_cmp$error)) {
+        output$loc_cmp_anova   <- renderDT({ datatable(data.frame(Error=loc_cmp$error)) })
+        output$loc_cmp_em_loc  <- renderDT({ datatable(data.frame()) })
+        output$loc_cmp_em_site <- renderDT({ datatable(data.frame()) })
+        output$loc_cmp_plot    <- renderPlot({ NULL })
+      } else {
+        output$loc_cmp_anova <- renderDT({
+          datatable(loc_cmp$anova,
+                    options=list(dom="t", pageLength=20, scrollX=TRUE),
+                    style="bootstrap", class="compact")
+        })
+        output$loc_cmp_em_loc <- renderDT({
+          datatable(loc_cmp$em_loc,
+                    options=list(dom="t", scrollX=TRUE),
+                    style="bootstrap", class="compact", rownames=FALSE)
+        })
+        output$loc_cmp_em_site <- renderDT({
+          datatable(loc_cmp$em_site,
+                    options=list(dom="t", scrollX=TRUE),
+                    style="bootstrap", class="compact", rownames=FALSE)
+        })
+        output$loc_cmp_plot <- renderPlot({
+          tryCatch({
+            df_p     <- loc_cmp$df
+            site_col <- loc_cmp$site_col
+            loc_col  <- loc_cmp$loc_col
+            y_col    <- loc_cmp$y_col
+            df_sum <- df_p %>%
+              group_by(.data[[site_col]], .data[[loc_col]]) %>%
+              summarise(mean_y=mean(.data[[y_col]], na.rm=TRUE),
+                        se_y=sd(.data[[y_col]], na.rm=TRUE)/
+                             sqrt(sum(!is.na(.data[[y_col]]))),
+                        .groups="drop")
+            ggplot(df_sum, aes(x=.data[[loc_col]], y=mean_y,
+                               fill=.data[[site_col]])) +
+              geom_bar(stat="identity", position=position_dodge(0.7),
+                       width=0.6, alpha=0.85) +
+              geom_errorbar(aes(ymin=mean_y-se_y, ymax=mean_y+se_y),
+                            position=position_dodge(0.7), width=0.2) +
+              scale_fill_manual(values=c("#ff6b6b","#00d4aa")) +
+              labs(x=loc_col, y=paste("Mean", y_col),
+                   title=paste("Mean", y_col, "by Location and Site"),
+                   fill=site_col) +
+              theme_classic(base_size=14) +
+              theme(legend.position="top")
+          }, error=function(e) NULL)
+        })
+      }
+
+      cmp_tab <- tabPanel("📍 Location Comparison",
+        br(),
+        if (!is.null(loc_cmp$error)) {
+          div(class="warn-box",
+              paste("⚠ Location comparison failed:", loc_cmp$error))
+        } else {
+          tagList(
+            div(class="formula-box",
+                paste0("lmer(", loc_cmp$formula, ", data = df)")),
+            div(class="info-notice", style="margin-top:8px;",
+                "📌 Model: Site + Location as fixed effects. ",
+                "(1|Location:Block) accounts for blocks nested within each location."),
+            br(),
+            h4("ANOVA Table"),       DTOutput("loc_cmp_anova"),   br(),
+            h4(paste("Location means (", loc_cmp$loc_col, ")")),
+            DTOutput("loc_cmp_em_loc"),  br(),
+            h4(paste("Site means (", loc_cmp$site_col, ")")),
+            DTOutput("loc_cmp_em_site"), br(),
+            h4("Location x Site Mean Plot"),
+            plotOutput("loc_cmp_plot")
+          )
+        }
+      )
+
+      all_tabs <- c(loc_tabs, list(cmp_tab))
+      return(tagList(fluidRow(
+        box(width=12,
+            title="Step 03 — Analysis Results (by Location)",
+            status="success",
+            do.call(tabsetPanel, all_tabs))
+      )))
+    }
   })
 
-  output$tbl_variance <- renderDT({
-    req(analysis_result()); req(analysis_result()$vc_tbl)
-    datatable(analysis_result()$vc_tbl, options=list(dom="t",pageLength=20),
-              style="bootstrap", class="compact", rownames=FALSE)
-  })
-  output$tbl_anova <- renderDT({
-    req(analysis_result())
-    datatable(analysis_result()$anova_tbl, options=list(dom="t",pageLength=20,scrollX=TRUE),
-              style="bootstrap", class="compact")
-  })
-  # ── Post-hoc 항 선택 드롭다운
-  output$posthoc_selector <- renderUI({
-    req(analysis_result())
-    terms   <- analysis_result()$anova_terms
-    default <- analysis_result()$default_term
-    selected <- if (default %in% terms) default else terms[length(terms)]
-    selectInput("sel_posthoc_term",
-                label  = "Select Post-hoc Term:",
-                choices  = terms,
-                selected = selected)
-  })
-
-  # ── Post-hoc 계산 reactive (선택된 term 기반)
-  posthoc_result <- reactive({
-    req(analysis_result())
-    req(input$sel_posthoc_term)
-    model <- analysis_result()$model
-    term  <- input$sel_posthoc_term
-    em <- tryCatch(emmeans(model, as.formula(paste("~", term))), error=function(e) NULL)
-    if (is.null(em)) return(NULL)
-    cld_tbl <- tryCatch(
-      as.data.frame(cld(em, adjust="sidak", Letters=letters, reverse=TRUE)),
-      error=function(e) as.data.frame(summary(em)))
-    list(cld_tbl=cld_tbl, posthoc_term=term)
-  })
-
-  output$posthoc_title <- renderUI({
-    req(posthoc_result())
-    div(style="font-size:13px;color:#555;margin-bottom:8px;",
-        paste("Estimated marginal means for:", posthoc_result()$posthoc_term,
-              "| Sidak adjustment | CLD letters"))
-  })
-  output$tbl_posthoc <- renderDT({
-    req(posthoc_result()); req(posthoc_result()$cld_tbl)
-    tbl <- posthoc_result()$cld_tbl
-    tbl <- tbl[order(tbl$emmean, decreasing=TRUE),]
-    tbl <- round_df(tbl)
-    datatable(tbl, options=list(dom="t",pageLength=30,scrollX=TRUE),
-              style="bootstrap", class="compact", rownames=FALSE)
-  })
-
-  output$plot_variance <- renderPlot({
-    req(analysis_result()); req(analysis_result()$vc_tbl)
-    vc <- analysis_result()$vc_tbl
-    vc$Groups <- factor(vc$Groups, levels=rev(vc$Groups))
-    ggplot(vc, aes(x=Groups, y=`% of Total`,
-                   fill=ifelse(grepl("Residual",Groups),"#ff6b6b","#00d4aa"))) +
-      geom_col(width=0.6, show.legend=FALSE) +
-      geom_text(aes(label=paste0(round(`% of Total`,1),"%")), hjust=-0.1, color="#2c2c2c", size=5) +
-      coord_flip() + scale_fill_identity() + scale_y_continuous(limits=c(0,115)) +
-      labs(title="Variance Component Decomposition", x=NULL, y="% of Total Variance") +
-      theme_minimal(base_family="mono") +
-      theme(plot.background=element_rect(fill="#faf8f3",color=NA),
-            panel.background=element_rect(fill="#faf8f3",color=NA),
-            panel.grid.major=element_line(color="#dddddd"), panel.grid.minor=element_blank(),
-            axis.text=element_text(color="#2c2c2c",size=18),
-            axis.title=element_text(color="#2c2c2c",size=18),
-            plot.title=element_text(color="#2c2c2c",size=20,face="bold"))
-  }, bg="#faf8f3")
-
-  output$plot_anova <- renderPlot({
-    req(analysis_result())
-    tbl <- analysis_result()$anova_tbl
-    tbl$Term <- rownames(tbl)
-    f_col <- if ("F value" %in% colnames(tbl)) "F value" else if ("F" %in% colnames(tbl)) "F" else NULL
-    req(!is.null(f_col))
-    tbl$Significant <- if ("Sig" %in% colnames(tbl)) tbl$Sig!="ns" else TRUE
-    tbl <- tbl[order(tbl[[f_col]], decreasing=FALSE),]
-    tbl$Term <- factor(tbl$Term, levels=tbl$Term)
-    ggplot(tbl, aes(x=Term, y=.data[[f_col]],
-                    fill=ifelse(Significant,"#f0a832","#2a3441"))) +
-      geom_col(width=0.6, show.legend=FALSE) +
-      geom_text(aes(label=paste0(round(.data[[f_col]],1),
-                                 if("Sig"%in%colnames(tbl)) paste0(" ",Sig) else "")),
-                hjust=-0.1, color="#2c2c2c", size=5) +
-      coord_flip() + scale_fill_identity() +
-      scale_y_continuous(limits=c(0,max(tbl[[f_col]])*1.3)) +
-      labs(title="Type III ANOVA \u2014 F Values", x=NULL, y="F value") +
-      theme_minimal(base_family="mono") +
-      theme(plot.background=element_rect(fill="#faf8f3",color=NA),
-            panel.background=element_rect(fill="#faf8f3",color=NA),
-            panel.grid.major=element_line(color="#dddddd"), panel.grid.minor=element_blank(),
-            axis.text=element_text(color="#2c2c2c",size=18),
-            axis.title=element_text(color="#2c2c2c",size=18),
-            plot.title=element_text(color="#2c2c2c",size=20,face="bold"))
-  }, bg="#faf8f3")
-
-  output$plot_posthoc <- renderPlot({
-    req(posthoc_result()); req(posthoc_result()$cld_tbl)
-    tbl <- posthoc_result()$cld_tbl
-    tbl <- tbl[order(tbl$emmean, decreasing=TRUE),]
-    v   <- analysis_result()$v
-    term_cols <- intersect(strsplit(posthoc_result()$posthoc_term,":")[[1]], colnames(tbl))
-    tbl$group_label <- if(length(term_cols)>0)
-      apply(tbl[,term_cols,drop=FALSE],1,paste,collapse=":") else rownames(tbl)
-    tbl$group_label <- factor(tbl$group_label, levels=rev(tbl$group_label))
-    tbl$color <- ifelse(grepl("AV|av",tbl$group_label),"#ff6b6b","#00d4aa")
-    se_col  <- if("SE"    %in%colnames(tbl)) "SE"     else NULL
-    grp_col <- if(".group"%in%colnames(tbl)) ".group" else NULL
-    p <- ggplot(tbl, aes(x=group_label,y=emmean,fill=color)) +
-      geom_col(width=0.65,show.legend=FALSE) + scale_fill_identity()
-    if (!is.null(se_col))
-      p <- p + geom_errorbar(aes(ymin=emmean-.data[[se_col]],ymax=emmean+.data[[se_col]]),
-                              width=0.2,color="#2c2c2c",linewidth=0.6)
-    if (!is.null(grp_col))
-      p <- p + geom_text(aes(label=trimws(.data[[grp_col]]),y=emmean+(max(emmean)*0.05)),
-                          color="#f0a832",size=6,fontface="bold")
-    p <- p +
-      geom_text(aes(label=round(emmean,1),y=emmean/2),color="#0d1117",size=6,fontface="bold") +
-      coord_flip() +
-      labs(title=paste("Post-hoc Estimated Means:", posthoc_result()$posthoc_term),
-           subtitle="Error bars = SE | Letters = Sidak CLD",
-           x=NULL, y=paste("Estimated Mean of", v$y)) +
-      theme_minimal(base_family="mono") +
-      theme(plot.background=element_rect(fill="#faf8f3",color=NA),
-            panel.background=element_rect(fill="#faf8f3",color=NA),
-            panel.grid.major=element_line(color="#dddddd"), panel.grid.minor=element_blank(),
-            axis.text=element_text(color="#2c2c2c",size=18),
-            axis.title=element_text(color="#2c2c2c",size=18),
-            plot.title=element_text(color="#2c2c2c",size=20,face="bold"),
-            plot.subtitle=element_text(color="#555555",size=15))
-    print(p)
-  }, bg="#faf8f3")
-
-  output$r_code <- renderText({
-    req(analysis_result())
-    v     <- analysis_result()$v
-    fs    <- analysis_result()$formula_str
-    fn    <- analysis_result()$model_fn
-    pt    <- if (!is.null(posthoc_result())) posthoc_result()$posthoc_term else analysis_result()$default_term
-    warns <- analysis_result()$warnings
-    warn_lines <- if(length(warns)) paste0(paste0("# \u26a0 ",warns,collapse="\n"),"\n\n") else ""
-    paste0(
-      "# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n",
-      "#  Agrivoltaics LMM Analysis\n",
-      "#  Generated by agrivoltaics.agronomy4future.com\n",
-      "#  Reference: agronomy4future.com/archives/24404\n",
-      "# \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n",
-      warn_lines,
-      '# install.packages(c("lme4","lmerTest","emmeans","multcomp","multcompView","ggplot2"))\n\n',
-      "library(lme4)\nlibrary(lmerTest)\nlibrary(emmeans)\n",
-      "library(multcomp)\nlibrary(multcompView)\nlibrary(ggplot2)\n\n",
-      'df <- read.csv("your_data.csv")\n\n',
-      "# Factor conversion\n",
-      paste0("df$",v$site, " <- as.factor(df$",v$site, ")\n"),
-      paste0("df$",v$block," <- as.factor(df$",v$block,")\n"),
-      if(v$genotype!="none") paste0("df$",v$genotype," <- as.factor(df$",v$genotype,")\n") else "",
-      if(v$row     !="none") paste0("df$",v$row,     " <- as.factor(df$",v$row,     ")\n") else "",
-      if(v$season  !="none") paste0("df$",v$season,  " <- as.factor(df$",v$season,  ")\n") else "",
-      "\n# Fit model\n",
-      paste0("model <- ",fn,"(",fs,", data = df)\n\n"),
-      if(fn=="lmer") "# Variance components\nprint(VarCorr(model), comp='Variance')\n\n" else "",
-      "# Type III ANOVA\nprint(anova(model, type = 3))\n\n",
-      "# Post-hoc analysis\n",
-      paste0("em <- emmeans(model, ~ ",pt,")\n"),
-      "cld_result <- cld(em, adjust='sidak', Letters=letters, reverse=TRUE)\n",
-      "print(cld_result)\n\n",
-      "# Visualization\n",
-      "ggplot(as.data.frame(cld_result),\n",
-      paste0("       aes(x=reorder(",strsplit(pt,":")[[1]][1],", emmean), y=emmean)) +\n"),
-      '  geom_col(fill="#00d4aa", width=0.6) +\n',
-      "  geom_errorbar(aes(ymin=emmean-SE, ymax=emmean+SE), width=0.2) +\n",
-      "  coord_flip() +\n",
-      paste0('  labs(title="Post-hoc: ',pt,'",\n'),
-      paste0('       x=NULL, y="',v$y,'") +\n'),
-      "  theme_minimal()\n"
-    )
-  })
-
-  output$model_summary <- renderPrint({
-    req(analysis_result())
-    summary(analysis_result()$model)
-  })
-}
-
-round_df <- function(df) {
-  for (col in colnames(df))
-    if (is.numeric(df[[col]])) df[[col]] <- round(df[[col]], 3)
-  df
 }
 
 shinyApp(ui = ui, server = server)
