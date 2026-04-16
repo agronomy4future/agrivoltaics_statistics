@@ -804,19 +804,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "sel_genotype",  choices=opt_ch)
     updateSelectInput(session, "sel_row",       choices=opt_ch)
     updateSelectInput(session, "sel_season",    choices=opt_ch)
-    auto <- list(
-      sel_y        = c("yield","output","y","biomass","grain"),
-      sel_site     = c("site","treatment","trt"),
-      sel_block    = c("block","rep","replicate"),
-      sel_genotype = c("genotype","cultivar","variety","cv","geno"),
-      sel_row      = c("row","row1"),
-      sel_season   = c("season","year")
-    )
-    for (sel_id in names(auto))
-      for (col in cols)
-        if (any(sapply(auto[[sel_id]], function(k) grepl(k, tolower(col))))) {
-          updateSelectInput(session, sel_id, selected=col); break
-        }
+
   })
 
   output$preview_table <- renderDT({
