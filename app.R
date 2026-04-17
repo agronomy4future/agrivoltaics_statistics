@@ -151,6 +151,9 @@ build_formula <- function(v) {
   model_fn <- if (use_lm) "lm" else "lmer"
 
   warnings <- character(0)
+  if (!has_rep)
+    warnings <- c(warnings,
+      "⚠ No replicates detected. Block is used as a fixed effect and lm() is applied.")
   if (!has_rep && case_num == 1 && !block_dep)
     warnings <- c(warnings,
       "⚠ Even though block is independent, Block (shared names) is used due to confounding with Site.")
@@ -587,8 +590,9 @@ ui <- dashboardPage(
   dashboardHeader(title = "Agrivoltaics Stat"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Analysis", tabName = "analysis", icon = icon("flask")),
-      menuItem("About",    tabName = "about",    icon = icon("info-circle"))
+      menuItem("Analysis",      tabName = "analysis", icon = icon("flask")),
+      menuItem("Developer Log", tabName = "devlog",  icon = icon("book")),
+      menuItem("About",         tabName = "about",   icon = icon("info-circle"))
     ),
     hr(),
     div(style = "padding: 10px;",
@@ -601,8 +605,6 @@ ui <- dashboardPage(
           "\u00a9 J.K Kim (kimjk@agronomy4future.com)", br(),
           "All Rights Reserved"),
         br(), br(),
-        tags$img(src = "logo.svg", style = "width:80%;max-width:160px;"),
-        br(), br(),
         tags$div(style = "font-size:13px;color:#2c2c2c;line-height:1.8;",
           tags$strong("How to Cite"), br(),
           "Kim, J., 2026.", br(),
@@ -611,7 +613,12 @@ ui <- dashboardPage(
           "agrivoltaics field experiments", br(),
           "[Software]. Available at:", br(),
           "agrivoltaics.agronomy4future.com"
-        )
+        ),
+        br(), br(),
+        tags$img(src = "logo.svg", style = "width:80%;max-width:160px;"),
+        br(),
+        tags$span(style = "font-size:11px;color:#888;font-style:italic;",
+          "We aim to develop open-source code for agronomy")
     )
   ),
   dashboardBody(
@@ -647,6 +654,8 @@ ui <- dashboardPage(
       .skin-black .main-header .logo{background:#ede9df!important;border-bottom:2px solid #00d4aa!important}
       .skin-black .main-header .navbar{background:#ede9df!important}
       .skin-black .main-sidebar{background:#e8e4d9!important}
+      .skin-black .sidebar-menu > li > a{color:#2c2c2c!important}
+      .skin-black .sidebar-menu > li.active > a{color:#ffffff!important}
       pre{background:#f0ede4!important;color:#555!important;border-color:#ccc!important;font-size:15px}
       table.dataTable td{font-size:15px!important}
       table.dataTable th{font-size:15px!important}
@@ -716,6 +725,25 @@ ui <- dashboardPage(
               uiOutput("layout_diagram"))
         ),
         uiOutput("results_ui")
+      ),
+      tabItem(tabName = "devlog",
+        box(width=12, title="Developer Log", status="primary",
+            div(style="font-size:12px;color:#8b949e;margin-bottom:16px;",
+                "Posts tagged ", strong("#agrivoltaics"), " from ",
+                a("today.agronomy4future.com", href="https://today.agronomy4future.com", target="_blank")
+            ),
+            uiOutput("devlog_posts"),
+            br(),
+            fluidRow(
+              column(12, style="text-align:center;",
+                actionButton("devlog_prev", "← Prev", class="btn-default",
+                             style="margin-right:8px;"),
+                uiOutput("devlog_page_info"),
+                actionButton("devlog_next", "Next →", class="btn-default",
+                             style="margin-left:8px;")
+              )
+            )
+        )
       ),
       tabItem(tabName = "about",
         box(width=12, title="About", status="primary",
@@ -1310,7 +1338,6 @@ server <- function(input, output, session) {
                    as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))))
           cld$.group <- trimws(cld$.group)
           cld <- cld[order(-cld$emmean), ]
-          cld$.group <- letters[1:nrow(cld)]
           rm(em); gc()
           datatable(round_df(cld), options=list(dom="t", scrollX=TRUE),
                     style="bootstrap", class="compact", rownames=FALSE)
@@ -1376,13 +1403,13 @@ server <- function(input, output, session) {
       })
       output$posthoc_ui_main <- renderUI({
         tagList(
-        tagList(
           div(class="warn-box",
               "⚠ Note: Post-hoc letters reflect mean differences only. ",
               "If ANOVA p > 0.05, letter differences should be interpreted with caution."),
           br(),
+          selectInput("posthoc_term_main", "Select term for post-hoc:",
                       choices=result$anova_terms, selected=result$default_term),
-          DTOutput("posthoc_tbl_main"), br(),
+          DTOutput("posthoc_tbl_main"), br()
         )
       })
       output$posthoc_tbl_main <- renderDT({
@@ -1403,7 +1430,6 @@ server <- function(input, output, session) {
             div(class="case-badge",
                 paste0("Case ", result$case_num, " — ",
                        CASE_DESC[as.character(result$case_num)])),
-            if (length(warn_tags) > 0) div(tagList(br(), warn_tags)),
             br(), br(),
             do.call(tabsetPanel, Filter(Negate(is.null), list(
               if (!is.null(result$vc_tbl))
@@ -1478,7 +1504,6 @@ server <- function(input, output, session) {
                        as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))))
               cld$.group <- trimws(cld$.group)
               cld <- cld[order(-cld$emmean), ]
-              cld$.group <- letters[1:nrow(cld)]
               rm(em); gc()
               datatable(round_df(cld), options=list(dom="t", scrollX=TRUE),
                         style="bootstrap", class="compact", rownames=FALSE)
@@ -1548,7 +1573,6 @@ server <- function(input, output, session) {
                      as.data.frame(multcomp::cld(em, Letters=letters, adjust="tukey"))))
             cld$.group <- trimws(cld$.group)
             cld <- cld[order(-cld$emmean), ]
-            cld$.group <- letters[1:nrow(cld)]
             rm(em); gc()
             datatable(round_df(cld),
                       options=list(dom="t", scrollX=TRUE),
@@ -1582,6 +1606,68 @@ server <- function(input, output, session) {
             do.call(tabsetPanel, all_tabs))
       )))
     }
+  })
+
+
+  # ── Developer Log ──────────────────────────────
+  DB_PATH <- "/srv/shiny-server/agrivoltaics/posts_today.db"
+  POSTS_PER_PAGE <- 5L
+  devlog_page <- reactiveVal(1L)
+
+  devlog_data <- reactive({
+    library(DBI)
+    library(RSQLite)
+    con <- dbConnect(RSQLite::SQLite(), DB_PATH)
+    on.exit(dbDisconnect(con))
+    dbGetQuery(con,
+      "SELECT id, content, post_date, image_path FROM posts
+       WHERE content LIKE '%#agrivoltaics%'
+          OR content LIKE '%hashtag#agrivoltaics%'
+       ORDER BY post_date DESC")
+  })
+
+  observeEvent(input$devlog_next, {
+    total <- ceiling(nrow(devlog_data()) / POSTS_PER_PAGE)
+    if (devlog_page() < total) devlog_page(devlog_page() + 1L)
+  })
+
+  observeEvent(input$devlog_prev, {
+    if (devlog_page() > 1L) devlog_page(devlog_page() - 1L)
+  })
+
+  output$devlog_page_info <- renderUI({
+    total <- ceiling(nrow(devlog_data()) / POSTS_PER_PAGE)
+    span(style="font-size:13px;color:#8b949e;margin:0 12px;",
+         paste0(devlog_page(), " / ", total))
+  })
+
+  output$devlog_posts <- renderUI({
+    df <- devlog_data()
+    if (nrow(df) == 0) return(p("No posts tagged #agrivoltaics yet."))
+    total <- ceiling(nrow(df) / POSTS_PER_PAGE)
+    pg    <- devlog_page()
+    s     <- (pg - 1L) * POSTS_PER_PAGE + 1L
+    e     <- min(pg * POSTS_PER_PAGE, nrow(df))
+    page_df <- df[s:e, ]
+
+    post_cards <- lapply(seq_len(nrow(page_df)), function(i) {
+      row <- page_df[i, ]
+      txt <- gsub("(#agrivoltaics|hashtag#agrivoltaics)",
+                  "<span style='color:#00d4aa;font-weight:bold;'>#agrivoltaics</span>",
+                  htmltools::htmlEscape(row$content))
+      txt <- gsub("\n", "<br>", txt)
+      img_tag <- if (!is.na(row$image_path) && nzchar(row$image_path)) {
+        fname <- basename(row$image_path)
+        tags$img(src=paste0("uploads/", fname),
+                 style="max-width:100%;border-radius:8px;margin-top:10px;")
+      } else NULL
+      div(style="border:1px solid #2a3441;border-radius:8px;padding:14px 18px;margin-bottom:14px;",
+        div(style="font-size:14px;color:#8b949e;margin-bottom:8px;", row$post_date),
+        div(style="font-size:16px;line-height:1.7;", HTML(txt)),
+        if (!is.null(img_tag)) img_tag
+      )
+    })
+    tagList(post_cards)
   })
 
 }
