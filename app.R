@@ -1424,7 +1424,6 @@ server <- function(input, output, session) {
       loc_cmp <- ar$loc_compare
       v       <- ar$v
 
-      message("DEBUG building loc_tabs, n=", length(locs))
       loc_tabs <- lapply(seq_along(locs), function(i) {
         loc       <- locs[[i]]
         res       <- loc_res[[loc]]
@@ -1557,8 +1556,7 @@ server <- function(input, output, session) {
           }, error=function(e)
             datatable(data.frame(Error=e$message), options=list(dom="t")))
         })
-      } # end if loc_cmp
-
+      }
       cmp_content <- if (!is.null(loc_cmp$error)) {
         div(class="warn-box",
             as.character(paste("⚠ Location comparison failed:", loc_cmp$error[1])))
